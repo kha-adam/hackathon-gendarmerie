@@ -1,4 +1,5 @@
 import * as turf from '@turf/turf';
+import { Feature, Point as GeoJSONPoint, FeatureCollection } from 'geojson';
 import { Point } from './Point';
 import { ZoneCouverte } from './ZoneCouverte';
 
@@ -7,6 +8,19 @@ export class Grille {
 
     constructor(points: Point[] = []) {
         this.points = points;
+    }
+    /* Convertit la grille en un tableau de Features GeoJSON
+     * Compatible à 100% avec le type de pointGrid.features
+     */
+    public toFeatures(): Feature<GeoJSONPoint>[] {
+        return this.points.map(p => turf.point(p.coordinates));
+    }
+
+    /**
+     * Convertit la grille en une FeatureCollection GeoJSON complète
+     */
+    public toFeatureCollection(): FeatureCollection<GeoJSONPoint> {
+        return turf.featureCollection(this.toFeatures());
     }
 
     /**
@@ -43,6 +57,14 @@ export class Grille {
         for (const featurePoint of gridCollection.features) {
             const [lon, lat] = featurePoint.geometry.coordinates;
             grillePoints.push(new Point(lon, lat));
+        }
+        // 7. MÉLANGE ALÉATOIRE (Algorithme de Fisher-Yates)
+        // pour optimiser l'algo de recherche
+        for (let i = grillePoints.length - 1; i > 0; i--) {
+            // Choix d'un index aléatoire entre 0 et i
+            const j = Math.floor(Math.random() * (i + 1));
+            // Échange des éléments à l'index i et j
+            [grillePoints[i], grillePoints[j]] = [grillePoints[j], grillePoints[i]];
         }
 
         return new Grille(grillePoints);
