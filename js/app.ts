@@ -1,6 +1,8 @@
 import * as L from 'leaflet';
 import * as turf from '@turf/turf';
 import { CoverageOptimizer } from './algo_remplissage.ts';
+// Selon l'architecture de votre coéquipier, importez aussi ZoneCouverte si nécessaire :
+// import { ZoneCouverte } from './ZoneCouverte';
 
 // ==========================================
 // 1. CLASSES DU MODÈLE (GeoJSON & Stockage)
