@@ -18,12 +18,14 @@ export class CoverageOptimizer {
     private polygonArea: number;
     private nbTeleop: number[]; // Nb teleop de niveau 1 et 2 dispos
     
-    // Variables pour la gestion du temps
+    // Variables pour la gestion du temps et de l'élagage
     private startTime: number = 0;
     private timeLimitMs: number = 0;
     private timeLimitReached: boolean = false;
-
     private objCoverage: number = 100;
+    
+    // Couverture maximale théorique (0 chevauchement, 0 perte)
+    private maxTheoreticalPercentage: number = 0;
 
     constructor(
         private polygon: Feature<Polygon>,
@@ -37,25 +39,26 @@ export class CoverageOptimizer {
         }
 
         this.nbTeleop = nbTeleop;
-
         this.polygonArea = turf.area(this.polygon);
         
-        // Précalcul de l'aire théorique des cercles (utile pour l'élagage)
+        // Précalcul de l'aire théorique des cercles
         const dummyPoint = turf.point([0, 0]);
         this.circle1.area = turf.area(turf.circle(dummyPoint, this.circle1.radius));
         this.circle2.area = turf.area(turf.circle(dummyPoint, this.circle2.radius));
+
+        // Calcul de la limite théorique absolue (100% d'efficacité des cercles disponibles)
+        const totalAvailableArea = (this.nbTeleop[0] * this.circle1.area) + (this.nbTeleop[1] * this.circle2.area);
+        this.maxTheoreticalPercentage = (totalAvailableArea / this.polygonArea) * 100;
     }
 
     // Fonction de calcul du pourcentage de surface couverte via Turf.js
     private calculateCoveragePercentage(centers: Feature<Point>[], radii: number[]): number {
         if (centers.length === 0) return 0;
 
-        // 1. Créer les géométries des cercles placés
         const circles = centers.map((center, index) => 
             turf.circle(center, radii[index])
         );
         
-        // 2. Faire l'union de tous les cercles pour gérer les superpositions
         let unionPolygon: Feature<Polygon | MultiPolygon> = circles[0];
         for (let i = 1; i < circles.length; i++) {
             const unionResult = turf.union(turf.featureCollection([unionPolygon, circles[i]]));
@@ -64,23 +67,15 @@ export class CoverageOptimizer {
             }
         }
 
-        // 3. Intersecter l'union des cercles avec le polygone cible
         const intersection = turf.intersect(turf.featureCollection([unionPolygon, this.polygon]));
-
-        // 4. Calculer l'aire et la convertir en pourcentage
         const rawArea = intersection ? turf.area(intersection) : 0;
         return (rawArea / this.polygonArea) * 100;
     }
 
-    /**
-     * Lance l'algorithme d'optimisation
-     * @param timeLimitSeconds Limite de temps en secondes (0 pour pas de limite)
-     */
     public optimize(timeLimitSeconds: number = 0, objCoverage: number = 100): Solution {
         this.startTime = Date.now();
         this.timeLimitMs = timeLimitSeconds * 1000;
         this.timeLimitReached = false;
-
         this.objCoverage = objCoverage;
         
         this.explore(0, [], [], this.nbTeleop[0], this.nbTeleop[1], 0);
@@ -100,13 +95,19 @@ export class CoverageOptimizer {
         remTeleopN2: number,
         currentPercentage: number
     ): void {
+        // --- ARRÊT GLOBAL SI SOLUTION PARFAITE ATTEINTE ---
+        // Si on a déjà trouvé un placement qui égale l'aire de tous les cercles dispos (aux erreurs de flottants près),
+        // c'est mathématiquement impossible de faire mieux. On arrête tout.
+        if (this.bestSolution.coveragePercentage >= this.maxTheoreticalPercentage - 0.0001) {
+            return;
+        }
+
         // --- GESTION DU TEMPS ---
         if (this.timeLimitMs > 0 && (Date.now() - this.startTime) >= this.timeLimitMs) {
             this.timeLimitReached = true;
             return;
         }
         
-        // Si on a déjà dépassé le temps dans une branche précédente, on remonte
         if (this.timeLimitReached) return;
 
         // Condition d'arrêt : fin de grille ou plus de cercles
@@ -122,16 +123,14 @@ export class CoverageOptimizer {
         }
 
         // --- ÉLAGAGE (Branch and Bound) ---
-        // On calcule le pourcentage maximal qu'on pourrait théoriquement ajouter (sans superposition)
         const maxPotentialExtraArea = (remTeleopN1 * this.circle1.area) + (remTeleopN2 * this.circle2.area);
         const maxPotentialExtraPercentage = (maxPotentialExtraArea / this.polygonArea) * 100;
         
-        // Si le % actuel + le potentiel maximum ne bat pas la meilleure solution connue, on coupe
         if (currentPercentage + maxPotentialExtraPercentage <= this.bestSolution.coveragePercentage) {
             return; 
         }
 
-        // Si on a déjà couvert objCoverage de la surface, on peut s'arrêter (optimisation)
+        // --- CONDITION D'OBJECTIF ---
         if (currentPercentage >= this.objCoverage) {
             this.bestSolution = { 
                 centers: [...currentCenters], 
@@ -151,7 +150,7 @@ export class CoverageOptimizer {
             const newPctC2 = this.calculateCoveragePercentage(currentCenters, currentRadii);
             this.explore(gridIndex + 1, currentCenters, currentRadii, remTeleopN1, remTeleopN2 - 1, newPctC2);
             
-            currentCenters.pop(); // Backtracking
+            currentCenters.pop();
             currentRadii.pop();
         }
         
@@ -163,7 +162,7 @@ export class CoverageOptimizer {
             const newPctC1 = this.calculateCoveragePercentage(currentCenters, currentRadii);
             this.explore(gridIndex + 1, currentCenters, currentRadii, remTeleopN1 - 1, remTeleopN2, newPctC1);
             
-            currentCenters.pop(); // Backtracking
+            currentCenters.pop();
             currentRadii.pop();
         }
 
