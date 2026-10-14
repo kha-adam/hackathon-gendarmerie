@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Zone de survol Alpha",
+        "description": "Polygone de test pour les drones"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [5.500, 10.00],
+            [2.3400, 48.8500],
+            [2.3600, 48.8500],
+            [2.3600, 48.8700],
+            [2.3400, 48.8700],
+            [2.3400, 48.8500]
+          ]
+        ]
+      }
+    }
+  ]
+}
