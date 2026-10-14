@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Coverage Planner</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        /* The main layout container */
+        #dashboard {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 80vh; /* Sets the frame height to 80% of the browser window */
+        }
+
+        /* The sidebar for your controls */
+        #sidebar {
+            flex: 1; /* Takes up 1 fraction of the layout */
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+
+        /* The map frame */
+        #map {
+            flex: 3; /* Takes up 3 fractions of the layout */
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            background: #e5e5e5; /* Shows briefly while tiles load */
+            z-index: 1; /* Keeps map elements from overlapping tooltips */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard">
+        <div id="sidebar">
+            <h2>Mission Control</h2>
+            <p>Dev 3 can build the UI to add teleoperators and drones in this area.</p>
+        </div>
+        
+        <!-- The map renders exclusively inside this framed div -->
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map, attach it to the 'map' div, and center it on Toulouse
+        const map = L.map('map').setView([43.6045, 1.4440], 13);
+
+        // Load the OpenStreetMap tiles
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+    </script>
+</body>
+</html>
