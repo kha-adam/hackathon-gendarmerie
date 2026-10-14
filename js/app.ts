@@ -1,6 +1,7 @@
 import * as L from 'leaflet';
 import * as turf from '@turf/turf';
 import { CoverageOptimizer } from './algo_remplissage';
+import { Grille } from '../objet/Grille'
 // Selon l'architecture de votre coéquipier, importez aussi ZoneCouverte si nécessaire :
 // import { ZoneCouverte } from './ZoneCouverte';
 
@@ -283,9 +284,10 @@ function runOptimization() {
     // 3. Création de la grille de points (Attention: CellSize trop petit = Crash)
     const bbox = turf.bbox(turfPolygon);
     const gridCellSizeKm = 0.5; // Résolution de la grille en km
-    const pointGrid = turf.pointGrid(bbox, gridCellSizeKm, { mask: turfPolygon });
 
-    if (pointGrid.features.length === 0) {
+    const pointGrid = Grille.newGrid(gridCellSizeKm, turfPolygon).toFeatures();
+
+    if (pointGrid.length === 0) {
         alert("La zone est trop petite pour la résolution de la grille (2km).");
         return;
     }
@@ -296,7 +298,7 @@ function runOptimization() {
 
     const optimizer = new CoverageOptimizer(
         turfPolygon,
-        pointGrid.features,
+        pointGrid,
         { radius: radiusT1, area: 0 },
         { radius: radiusT2, area: 0 },
         [nbT1, nbT2]
