@@ -20,9 +20,11 @@ const circle2 = { radius: 4.0, area: 0 }; // Non utilisé ici
 const nb_teleop = [4, 2];
 
 const optimizer = new CoverageOptimizer(squarePolygon, grid, circle1, circle2, nb_teleop);
-const result = optimizer.optimize();
+const result = optimizer.optimize(20, 30);
 
 // Vérifications
 console.log("Aire totale du polygone (m²) :", turf.area(squarePolygon));
 console.log("Cercles placés :", result.centers.length); // Devrait être 2
+console.log("Cercles", result.centers);
+console.log("Rayons", result.radii);
 console.log("Surface couverte :", result.coveragePercentage.toFixed(2), "%");

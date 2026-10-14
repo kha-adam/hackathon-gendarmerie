@@ -2,12 +2,12 @@ import * as turf from '@turf/turf';
 import { Feature, Polygon, Point, MultiPolygon } from 'geojson';
 
 // Définition des paramètres d'entrée
-interface CircleDef {
+export interface CircleDef {
     radius: number;   // Rayon en kilomètres (ou degrés selon la projection Turf)
     area: number;     // Aire théorique d'un cercle (précalculée)
 }
 
-interface Solution {
+export interface Solution {
     centers: Feature<Point>[];
     radii: number[];
     coveragePercentage: number;
@@ -17,6 +17,13 @@ export class CoverageOptimizer {
     private bestSolution: Solution = { centers: [], radii: [], coveragePercentage: 0 };
     private polygonArea: number;
     private nbTeleop: number[]; // Nb teleop de niveau 1 et 2 dispos
+    
+    // Variables pour la gestion du temps
+    private startTime: number = 0;
+    private timeLimitMs: number = 0;
+    private timeLimitReached: boolean = false;
+
+    private objCoverage: number = 100;
 
     constructor(
         private polygon: Feature<Polygon>,
@@ -32,12 +39,10 @@ export class CoverageOptimizer {
         this.nbTeleop = nbTeleop;
 
         this.polygonArea = turf.area(this.polygon);
-        console.log(this.polygonArea);
         
         // Précalcul de l'aire théorique des cercles (utile pour l'élagage)
         const dummyPoint = turf.point([0, 0]);
         this.circle1.area = turf.area(turf.circle(dummyPoint, this.circle1.radius));
-        console.log(this.circle1.area);
         this.circle2.area = turf.area(turf.circle(dummyPoint, this.circle2.radius));
     }
 
@@ -67,9 +72,23 @@ export class CoverageOptimizer {
         return (rawArea / this.polygonArea) * 100;
     }
 
-    // Lancement de l'algorithme
-    public optimize(): Solution {
+    /**
+     * Lance l'algorithme d'optimisation
+     * @param timeLimitSeconds Limite de temps en secondes (0 pour pas de limite)
+     */
+    public optimize(timeLimitSeconds: number = 0, objCoverage: number = 100): Solution {
+        this.startTime = Date.now();
+        this.timeLimitMs = timeLimitSeconds * 1000;
+        this.timeLimitReached = false;
+
+        this.objCoverage = objCoverage;
+        
         this.explore(0, [], [], this.nbTeleop[0], this.nbTeleop[1], 0);
+        
+        if (this.timeLimitReached) {
+            console.log(`Exploration interrompue : limite de temps de ${timeLimitSeconds}s atteinte.`);
+        }
+        
         return this.bestSolution;
     }
 
@@ -81,6 +100,15 @@ export class CoverageOptimizer {
         remTeleopN2: number,
         currentPercentage: number
     ): void {
+        // --- GESTION DU TEMPS ---
+        if (this.timeLimitMs > 0 && (Date.now() - this.startTime) >= this.timeLimitMs) {
+            this.timeLimitReached = true;
+            return;
+        }
+        
+        // Si on a déjà dépassé le temps dans une branche précédente, on remonte
+        if (this.timeLimitReached) return;
+
         // Condition d'arrêt : fin de grille ou plus de cercles
         if (gridIndex === this.grid.length || (remTeleopN1 === 0 && remTeleopN2 === 0)) {
             if (currentPercentage > this.bestSolution.coveragePercentage) {
@@ -103,8 +131,8 @@ export class CoverageOptimizer {
             return; 
         }
 
-        // Si on a déjà couvert 99.9% de la surface, on peut s'arrêter (optimisation)
-        if (currentPercentage >= 99.9) {
+        // Si on a déjà couvert objCoverage de la surface, on peut s'arrêter (optimisation)
+        if (currentPercentage >= this.objCoverage) {
             this.bestSolution = { 
                 centers: [...currentCenters], 
                 radii: [...currentRadii], 
@@ -115,25 +143,25 @@ export class CoverageOptimizer {
 
         const point = this.grid[gridIndex];
 
-        // --- CHOIX A : Placer un cercle de type 1 ---
-        if (remTeleopN1 > 0) {
-            currentCenters.push(point);
-            currentRadii.push(this.circle1.radius);
-            
-            const newPctC1 = this.calculateCoveragePercentage(currentCenters, currentRadii);
-            this.explore(gridIndex + 1, currentCenters, currentRadii, remTeleopN1 - 1, remTeleopN2, newPctC1);
-            
-            currentCenters.pop(); // Backtracking
-            currentRadii.pop();
-        }
-
-        // --- CHOIX B : Placer un cercle de type 2 ---
+        // --- CHOIX A : Placer un teleoperateur de niveau 2 ---
         if (remTeleopN2 > 0) {
             currentCenters.push(point);
             currentRadii.push(this.circle2.radius);
             
             const newPctC2 = this.calculateCoveragePercentage(currentCenters, currentRadii);
             this.explore(gridIndex + 1, currentCenters, currentRadii, remTeleopN1, remTeleopN2 - 1, newPctC2);
+            
+            currentCenters.pop(); // Backtracking
+            currentRadii.pop();
+        }
+        
+        // --- CHOIX B : Placer un teleoperateur de niveau 1 ---
+        if (remTeleopN1 > 0) {
+            currentCenters.push(point);
+            currentRadii.push(this.circle1.radius);
+            
+            const newPctC1 = this.calculateCoveragePercentage(currentCenters, currentRadii);
+            this.explore(gridIndex + 1, currentCenters, currentRadii, remTeleopN1 - 1, remTeleopN2, newPctC1);
             
             currentCenters.pop(); // Backtracking
             currentRadii.pop();
