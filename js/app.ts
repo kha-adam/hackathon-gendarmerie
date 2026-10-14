@@ -1,6 +1,7 @@
 import * as L from 'leaflet';
 import * as turf from '@turf/turf';
 import { CoverageOptimizer } from './algo_remplissage';
+import { TeleopEstimator } from './algo_planif';
 import { Grille } from '../objet/Grille'
 // Selon l'architecture de votre coéquipier, importez aussi ZoneCouverte si nécessaire :
 // import { ZoneCouverte } from './ZoneCouverte';
@@ -109,6 +110,91 @@ export class ZoneManager {
         } catch(err) {}
         renderSavedZonesUI();
     }
+}
+function runFindMinTeleoperators() {
+    if (currentPoints.length < 3) {
+        alert("Veuillez d'abord tracer une zone fermée (au moins 3 points).");
+        return;
+    }
+
+    // 1. Récupération de la couverture cible et du timeout
+    const targetCoverageInput = document.getElementById('input-target-coverage') as HTMLInputElement;
+    const targetCoverage = parseFloat(targetCoverageInput?.value) || 80;
+    
+    const timeoutInput = document.getElementById('input-timeout') as HTMLInputElement;
+    const timeLimitSeconds = parseFloat(timeoutInput?.value) || 20;
+
+    const coverageText = document.getElementById('coverage-result');
+    if (coverageText) {
+        coverageText.innerText = `Recherche du minimum pour ${targetCoverage}%...`;
+    }
+
+    // 2. Conversion en polygone Turf et génération de la grille
+    const geoJsonCoords = currentPoints.map(p => [p[1], p[0]]);
+    geoJsonCoords.push([...geoJsonCoords[0]]);
+    const turfPolygon = turf.polygon([geoJsonCoords]);
+
+    const gridCellSizeKm = 0.5; // Même résolution que dans runOptimization
+    const pointGrid = Grille.newGrid(gridCellSizeKm, turfPolygon).toFeatures();
+
+    if (pointGrid.length === 0) {
+        alert("La zone est trop petite pour la résolution de la grille.");
+        return;
+    }
+
+    const radiusT1 = 1; // km
+    const radiusT2 = 2; // km
+
+    // 3. Exécution asynchrone pour ne pas geler l'interface
+    setTimeout(() => {
+        // On initialise votre estimateur
+        const estimator = new TeleopEstimator(
+            turfPolygon,
+            pointGrid,
+            { radius: radiusT1, area: 0 },
+            { radius: radiusT2, area: 0 }
+        );
+
+        // On lance la recherche intelligente
+        const result = estimator.estimateMinTeleops(targetCoverage, timeLimitSeconds);
+
+        if (result && result.solution) {
+            const { teleopN1, teleopN2, solution } = result;
+
+            // Affichage des cercles sur la carte
+            renderSolution(solution);
+
+            // Mise à jour automatique des sliders dans l'UI (Option A)
+            const sliderT1 = document.getElementById('slider-t1') as HTMLInputElement;
+            const sliderT2 = document.getElementById('slider-t2') as HTMLInputElement;
+            if (sliderT1) sliderT1.value = teleopN1.toString();
+            if (sliderT2) sliderT2.value = teleopN2.toString();
+            
+            const valT1 = document.getElementById('val-t1');
+            const valT2 = document.getElementById('val-t2');
+            if (valT1) valT1.innerText = teleopN1.toString();
+            if (valT2) valT2.innerText = teleopN2.toString();
+
+            // Affichage du texte de résultat
+            if (coverageText) {
+                // On vérifie si l'objectif a été atteint (avec la marge d'erreur de virgule flottante)
+                const isSuccess = solution.coveragePercentage >= (targetCoverage - 0.0001);
+                
+                if (isSuccess) {
+                    coverageText.innerText = `${solution.coveragePercentage.toFixed(2)}% (Atteint avec ${teleopN1} TP1, ${teleopN2} TP2)`;
+                    coverageText.style.color = "#16A34A"; // Vert Gendarmerie
+                } else {
+                    coverageText.innerText = `${solution.coveragePercentage.toFixed(2)}% (Temps écoulé - Max trouvé : ${teleopN1} TP1, ${teleopN2} TP2)`;
+                    coverageText.style.color = "#D97706"; // Orange
+                }
+            }
+        } else {
+            if (coverageText) {
+                coverageText.innerText = "Échec de l'optimisation.";
+                coverageText.style.color = "#DC2626"; // Rouge
+            }
+        }
+    }, 50);
 }
 
 // ==========================================
@@ -307,8 +393,6 @@ function runOptimization() {
         { radius: radiusT2, area: 0 },
         [nbT1, nbT2]
     );
-    console.log(nbT1)
-    console.log(nbT2)
     const coverageText = document.getElementById('coverage-result');
     if (coverageText) coverageText.innerText = "Calcul en cours...";
     
@@ -406,118 +490,7 @@ document.getElementById('btn-optimize')?.addEventListener('click', runOptimizati
 // RECHERCHE DU NOMBRE MINIMUM DE TÉLÉOPÉRATEURS
 // ==========================================
 
-function runFindMinTeleoperators() {
-    if (currentPoints.length < 3) {
-        alert("Veuillez d'abord tracer une zone fermée (au moins 3 points).");
-        return;
-    }
 
-    // 1. Récupération de la couverture cible et du timeout
-    const targetCoverage = parseFloat((document.getElementById('input-target-coverage') as HTMLInputElement).value) || 80;
-    const timeoutInput = document.getElementById('input-timeout') as HTMLInputElement;
-    const timeLimitSeconds = parseInt(timeoutInput?.value || '10', 10);
-
-    const coverageText = document.getElementById('coverage-result');
-    if (coverageText) {
-        coverageText.innerText = `Recherche du minimum pour ${targetCoverage}%...`;
-    }
-
-    // 2. Conversion en polygone Turf et génération de la grille
-    const geoJsonCoords = currentPoints.map(p => [p[1], p[0]]);
-    geoJsonCoords.push([...geoJsonCoords[0]]);
-    const turfPolygon = turf.polygon([geoJsonCoords]);
-
-    const bbox = turf.bbox(turfPolygon);
-    const gridCellSizeKm = 2; 
-    const pointGrid = turf.pointGrid(bbox, gridCellSizeKm, { mask: turfPolygon });
-
-    if (pointGrid.features.length === 0) {
-        alert("La zone est trop petite pour la résolution de la grille.");
-        return;
-    }
-
-    const radiusT1 = 1; // km
-    const radiusT2 = 2; // km
-    const startTime = Date.now();
-    const timeLimitMs = timeLimitSeconds * 1000;
-
-    setTimeout(() => {
-        let bestFoundSolution: any = null;
-        let bestN1 = 0;
-        let bestN2 = 0;
-        let success = false;
-
-        // On teste un nombre total croissant de téléopérateurs : k = 1, 2, 3...
-        const maxTotal = 10; // Sécurité pour éviter les boucles infinies
-        
-        for (let k = 1; k <= maxTotal; k++) {
-            if (timeLimitMs > 0 && (Date.now() - startTime) >= timeLimitMs) break;
-
-            // Pour k téléopérateurs, on teste les combinaisons (N2 prioritaire car plus grand rayon)
-            for (let n2 = k; n2 >= 0; n2--) {
-                const n1 = k - n2;
-
-                if (timeLimitMs > 0 && (Date.now() - startTime) >= timeLimitMs) break;
-
-                const optimizer = new CoverageOptimizer(
-                    turfPolygon,
-                    pointGrid.features,
-                    { radius: radiusT1, area: 0 },
-                    { radius: radiusT2, area: 0 },
-                    [n1, n2]
-                );
-
-                // Temps restant calculé dynamiquement
-                const elapsedSec = (Date.now() - startTime) / 1000;
-                const remSec = timeLimitSeconds > 0 ? Math.max(0.1, timeLimitSeconds - elapsedSec) : 0;
-
-                const sol = optimizer.optimize(remSec, targetCoverage);
-
-                // On sauvegarde la meilleure solution croisée
-                if (!bestFoundSolution || sol.coveragePercentage > bestFoundSolution.coveragePercentage) {
-                    bestFoundSolution = sol;
-                    bestN1 = n1;
-                    bestN2 = n2;
-                }
-
-                // Si l'objectif de couverture est atteint, on s'arrête
-                if (sol.coveragePercentage >= targetCoverage) {
-                    bestFoundSolution = sol;
-                    bestN1 = n1;
-                    bestN2 = n2;
-                    success = true;
-                    break;
-                }
-            }
-
-            if (success) break;
-        }
-
-        // 3. Affichage du résultat et mise à jour des curseurs
-        if (bestFoundSolution) {
-            renderSolution(bestFoundSolution);
-
-            // Met à jour les sliders UI avec la solution trouvée
-            const sliderT1 = document.getElementById('slider-t1') as HTMLInputElement;
-            const sliderT2 = document.getElementById('slider-t2') as HTMLInputElement;
-            if (sliderT1) sliderT1.value = bestN1.toString();
-            if (sliderT2) sliderT2.value = bestN2.toString();
-            
-            const valT1 = document.getElementById('val-t1');
-            const valT2 = document.getElementById('val-t2');
-            if (valT1) valT1.innerText = bestN1.toString();
-            if (valT2) valT2.innerText = bestN2.toString();
-
-            if (coverageText) {
-                if (success) {
-                    coverageText.innerText = `${bestFoundSolution.coveragePercentage.toFixed(2)}% (Atteint avec ${bestN1} TP1, ${bestN2} TP2)`;
-                } else {
-                    coverageText.innerText = `${bestFoundSolution.coveragePercentage.toFixed(2)}% (Max possible atteint avec ${bestN1} TP1, ${bestN2} TP2)`;
-                }
-            }
-        }
-    }, 50);
-}
 
 // Attachement de l'événement (à ajouter avec les autres addEventListener en bas du fichier)
 document.getElementById('btn-find-min')?.addEventListener('click', runFindMinTeleoperators);
@@ -536,12 +509,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
 
+    
     const datetimeInput = document.getElementById('weather-time') as HTMLInputElement;
     if (datetimeInput) {
         datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
         datetimeInput.addEventListener('change', () => fetchWeatherData());
     }
-
+    
     document.getElementById('btn-refresh-weather')?.addEventListener('click', () => fetchWeatherData());
     
     // Chargement initial pour la position par défaut
