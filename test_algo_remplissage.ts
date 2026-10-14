@@ -1,5 +1,5 @@
 import * as turf from '@turf/turf';
-import { CoverageOptimizer } from './algo_remplissage'; // votre fichier
+import { CoverageOptimizer } from './js/algo_remplissage'; // votre fichier
 
 // Création d'un carré d'environ 11x11 km (0.1 degré de côté)
 const squarePolygon = turf.polygon([[
