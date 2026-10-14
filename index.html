@@ -69,42 +69,59 @@
             </div>
 
             <!-- PANNEAU DROIT : PARAMÈTRES ET OPTIMISATION -->
-            <div class="bottom-panel">
-                <h3>Algorithme d'Optimisation de Couverture</h3>
+            <!-- PANNEAU DROIT : PARAMÈTRES ET OPTIMISATION -->
+<div class="bottom-panel">
+    <h3>Algorithme d'Optimisation de Couverture</h3>
+    
+    <!-- PARAMÈTRE COMMUN -->
+    <div class="control-group shared-setting">
+        <label for="input-timeout">Temps maximal de calcul (secondes) :</label>
+        <input type="number" id="input-timeout" min="0" max="300" value="10" placeholder="0 pour illimité">
+    </div>
+
+    <!-- CONTENEUR DES DEUX FONCTIONNALITÉS DISTINCTES -->
+    <div class="algo-modes-container">
+        
+        <!-- MOTEUR 1 : CALCUL À FLOTTE FIXE -->
+        <div class="algo-card">
+            <div>
+                <h4>Option A : Calcul à flotte fixe</h4>
                 
-                <div class="control-grid">
-                    <div class="control-group">
-                        <label for="slider-t1">Télépilotes TP1: <span id="val-t1" class="badge">1</span></label>
-                        <input type="range" id="slider-t1" min="0" max="10" value="1" oninput="document.getElementById('val-t1').innerText = this.value">
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="slider-t2">Télépilotes TP2: <span id="val-t2" class="badge">1</span></label>
-                        <input type="range" id="slider-t2" min="0" max="10" value="1" oninput="document.getElementById('val-t2').innerText = this.value">
-                    </div>
+                <div class="control-group">
+                    <label for="slider-t1">Télépilotes TP1: <span id="val-t1" class="badge">1</span></label>
+                    <input type="range" id="slider-t1" min="0" max="10" value="1" oninput="document.getElementById('val-t1').innerText = this.value">
                 </div>
-
-                <div class="control-grid">
-                    <div class="control-group">
-                        <label for="input-target-coverage">Couverture cible (%) :</label>
-                        <div class="input-action-group">
-                            <input type="number" id="input-target-coverage" min="1" max="100" value="80">
-                            <button id="btn-find-min" class="btn-secondary">Optimiser le nombre de TP</button>
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="input-timeout">Temps maximal de calcul (secondes) :</label>
-                        <input type="number" id="input-timeout" min="0" max="300" value="10" placeholder="0 pour illimité">
-                    </div>
-                </div>
-
-                <button id="btn-optimize" class="btn-action">Lancer le calcul d'optimisation</button>
                 
-                <div class="result-box">
-                    <span><strong>Couverture estimée : </strong><span id="coverage-result" class="result-value">0%</span></span>
+                <div class="control-group">
+                    <label for="slider-t2">Télépilotes TP2: <span id="val-t2" class="badge">1</span></label>
+                    <input type="range" id="slider-t2" min="0" max="10" value="1" oninput="document.getElementById('val-t2').innerText = this.value">
                 </div>
             </div>
+
+            <button id="btn-optimize" class="btn-action">Lancer le calcul d'optimisation</button>
+        </div>
+
+        <!-- MOTEUR 2 : RECHERCHE DE LA FLOTTE MINIMALE -->
+        <div class="algo-card">
+            <div>
+                <h4>Option B : Recherche de flotte minimale</h4>
+                
+                <div class="control-group">
+                    <label for="input-target-coverage">Couverture cible (%) :</label>
+                    <input type="number" id="input-target-coverage" min="1" max="100" value="80">
+                </div>
+            </div>
+
+            <button id="btn-find-min" class="btn-action">Optimiser le nombre de TP</button>
+        </div>
+
+    </div>
+
+    <!-- AFFICHAGE DES RÉSULTATS -->
+    <div class="result-box">
+        <span><strong>Résultat : </strong><span id="coverage-result" class="result-value">0%</span></span>
+    </div>
+</div>
 
         </div>
     </div>
