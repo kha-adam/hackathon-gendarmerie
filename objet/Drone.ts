@@ -4,6 +4,7 @@ import { Teleoperateur } from './Teleoperateur';
 export abstract class Drone {
     public champDeVision: number;
     public abstract visionNocturne: boolean;
+    public abstract deploimentpluie: boolean;
     public teleoperateur?: Teleoperateur;
     public point: Point;
 

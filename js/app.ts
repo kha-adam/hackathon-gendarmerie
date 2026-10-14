@@ -1,6 +1,10 @@
 import * as L from 'leaflet';
 import * as turf from '@turf/turf';
-import { CoverageOptimizer } from './algo_remplissage.ts';
+import { CoverageOptimizer } from './algo_remplissage';
+import { TeleopEstimator } from './algo_planif';
+import { Grille } from '../objet/Grille'
+// Selon l'architecture de votre coéquipier, importez aussi ZoneCouverte si nécessaire :
+// import { ZoneCouverte } from './ZoneCouverte';
 
 // ==========================================
 // 1. CLASSES DU MODÈLE (GeoJSON & Stockage)
@@ -107,6 +111,91 @@ export class ZoneManager {
         renderSavedZonesUI();
     }
 }
+function runFindMinTeleoperators() {
+    if (currentPoints.length < 3) {
+        alert("Veuillez d'abord tracer une zone fermée (au moins 3 points).");
+        return;
+    }
+
+    // 1. Récupération de la couverture cible et du timeout
+    const targetCoverageInput = document.getElementById('input-target-coverage') as HTMLInputElement;
+    const targetCoverage = parseFloat(targetCoverageInput?.value) || 80;
+    
+    const timeoutInput = document.getElementById('input-timeout') as HTMLInputElement;
+    const timeLimitSeconds = parseFloat(timeoutInput?.value) || 20;
+
+    const coverageText = document.getElementById('coverage-result');
+    if (coverageText) {
+        coverageText.innerText = `Recherche du minimum pour ${targetCoverage}%...`;
+    }
+
+    // 2. Conversion en polygone Turf et génération de la grille
+    const geoJsonCoords = currentPoints.map(p => [p[1], p[0]]);
+    geoJsonCoords.push([...geoJsonCoords[0]]);
+    const turfPolygon = turf.polygon([geoJsonCoords]);
+
+    const gridCellSizeKm = 0.5; // Même résolution que dans runOptimization
+    const pointGrid = Grille.newGrid(gridCellSizeKm, turfPolygon).toFeatures();
+
+    if (pointGrid.length === 0) {
+        alert("La zone est trop petite pour la résolution de la grille.");
+        return;
+    }
+
+    const radiusT1 = 1; // km
+    const radiusT2 = 2; // km
+
+    // 3. Exécution asynchrone pour ne pas geler l'interface
+    setTimeout(() => {
+        // On initialise votre estimateur
+        const estimator = new TeleopEstimator(
+            turfPolygon,
+            pointGrid,
+            { radius: radiusT1, area: 0 },
+            { radius: radiusT2, area: 0 }
+        );
+
+        // On lance la recherche intelligente
+        const result = estimator.estimateMinTeleops(targetCoverage, timeLimitSeconds);
+
+        if (result && result.solution) {
+            const { teleopN1, teleopN2, solution } = result;
+
+            // Affichage des cercles sur la carte
+            renderSolution(solution);
+
+            // Mise à jour automatique des sliders dans l'UI (Option A)
+            const sliderT1 = document.getElementById('slider-t1') as HTMLInputElement;
+            const sliderT2 = document.getElementById('slider-t2') as HTMLInputElement;
+            if (sliderT1) sliderT1.value = teleopN1.toString();
+            if (sliderT2) sliderT2.value = teleopN2.toString();
+            
+            const valT1 = document.getElementById('val-t1');
+            const valT2 = document.getElementById('val-t2');
+            if (valT1) valT1.innerText = teleopN1.toString();
+            if (valT2) valT2.innerText = teleopN2.toString();
+
+            // Affichage du texte de résultat
+            if (coverageText) {
+                // On vérifie si l'objectif a été atteint (avec la marge d'erreur de virgule flottante)
+                const isSuccess = solution.coveragePercentage >= (targetCoverage - 0.0001);
+                
+                if (isSuccess) {
+                    coverageText.innerText = `${solution.coveragePercentage.toFixed(2)}% (Atteint avec ${teleopN1} TP1, ${teleopN2} TP2)`;
+                    coverageText.style.color = "#16A34A"; // Vert Gendarmerie
+                } else {
+                    coverageText.innerText = `${solution.coveragePercentage.toFixed(2)}% (Temps écoulé - Max trouvé : ${teleopN1} TP1, ${teleopN2} TP2)`;
+                    coverageText.style.color = "#D97706"; // Orange
+                }
+            }
+        } else {
+            if (coverageText) {
+                coverageText.innerText = "Échec de l'optimisation.";
+                coverageText.style.color = "#DC2626"; // Rouge
+            }
+        }
+    }, 50);
+}
 
 // ==========================================
 // 2. INITIALISATION CARTE & ÉTAT GLOBAL
@@ -146,7 +235,7 @@ function addPointToState(lat: number, lng: number) {
     const li = document.createElement('li');
     li.textContent = `[${lat.toFixed(4)}, ${lng.toFixed(4)}]`;
     document.getElementById('point-list')?.appendChild(li);
-
+    fetchWeatherData();
     updatePolygon();
 }
 
@@ -249,7 +338,10 @@ async function performSearch() {
             const lon = parseFloat(data[0].lon);
             
             map.setView([lat, lon], 12);
-            if (status) status.innerText = `Trouvé : ${data[0].display_name}`;
+            if (status) {
+                status.innerText = `Trouvé : ${data[0].display_name}`;
+                updateWeatherLocation(lat, lon);
+            }
         } else {
             if (status) status.innerText = "Aucun résultat trouvé.";
         }
@@ -281,9 +373,10 @@ function runOptimization() {
     // 3. Création de la grille de points (Attention: CellSize trop petit = Crash)
     const bbox = turf.bbox(turfPolygon);
     const gridCellSizeKm = 0.5; // Résolution de la grille en km
-    const pointGrid = turf.pointGrid(bbox, gridCellSizeKm, { mask: turfPolygon });
 
-    if (pointGrid.features.length === 0) {
+    const pointGrid = Grille.newGrid(gridCellSizeKm, turfPolygon).toFeatures();
+
+    if (pointGrid.length === 0) {
         alert("La zone est trop petite pour la résolution de la grille (2km).");
         return;
     }
@@ -291,22 +384,22 @@ function runOptimization() {
     // 4. Initialisation de l'optimiseur
     const radiusT1 = 1; // km
     const radiusT2 = 2; // km
+    const timeLimitSeconds = parseFloat((document.getElementById('input-timeout') as HTMLInputElement).value) || 20;
 
     const optimizer = new CoverageOptimizer(
         turfPolygon,
-        pointGrid.features,
+        pointGrid,
         { radius: radiusT1, area: 0 },
         { radius: radiusT2, area: 0 },
         [nbT1, nbT2]
     );
-    console.log(nbT1)
-    console.log(nbT2)
     const coverageText = document.getElementById('coverage-result');
     if (coverageText) coverageText.innerText = "Calcul en cours...";
     
     // Délai pour laisser le DOM s'actualiser avant le calcul intensif
     setTimeout(() => {
-        const solution = optimizer.optimize();
+        // Transmission de timeLimitSeconds (et 100% de couverture cible par défaut)
+        const solution = optimizer.optimize(timeLimitSeconds, 100);
         renderSolution(solution);
     }, 50);
 }
@@ -392,3 +485,134 @@ document.getElementById('search-input')?.addEventListener('keydown', (e: Keyboar
 });
 
 document.getElementById('btn-optimize')?.addEventListener('click', runOptimization);
+
+// ==========================================
+// RECHERCHE DU NOMBRE MINIMUM DE TÉLÉOPÉRATEURS
+// ==========================================
+
+
+
+// Attachement de l'événement (à ajouter avec les autres addEventListener en bas du fichier)
+document.getElementById('btn-find-min')?.addEventListener('click', runFindMinTeleoperators);
+// ==========================================
+// LOGIQUE MÉTÉO & DÉCISION DRONE
+// ==========================================
+
+let lastSearchCoords: { lat: number, lng: number } | null = null;
+
+// Initialisation au chargement du DOM
+window.addEventListener('DOMContentLoaded', () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    
+    const datetimeInput = document.getElementById('weather-time') as HTMLInputElement;
+    if (datetimeInput) {
+        datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        datetimeInput.addEventListener('change', () => fetchWeatherData());
+    }
+    
+    document.getElementById('btn-refresh-weather')?.addEventListener('click', () => fetchWeatherData());
+    
+    // Chargement initial pour la position par défaut
+    fetchWeatherData();
+});
+
+export async function updateWeatherLocation(lat: number, lng: number) {
+    lastSearchCoords = { lat, lng };
+    await fetchWeatherData();
+}
+
+async function fetchWeatherData() {
+    const widgetEl = document.getElementById('weather-widget');
+    const timeInput = (document.getElementById('weather-time') as HTMLInputElement)?.value;
+
+    if (!widgetEl) return;
+
+    let lat = 43.604;
+    let lng = 1.444;
+    let sourceLabel = "Position par défaut";
+
+    if (currentPoints.length > 0) {
+        const lastPoint = currentPoints[currentPoints.length - 1];
+        lat = lastPoint[0];
+        lng = lastPoint[1];
+        sourceLabel = "Zone Polygone";
+    } else if (lastSearchCoords) {
+        lat = lastSearchCoords.lat;
+        lng = lastSearchCoords.lng;
+        sourceLabel = "Zone de Recherche";
+    }
+
+    const cardContainer = widgetEl.querySelector('.weather-card');
+    if (cardContainer) {
+        cardContainer.innerHTML = `<p class="help-text" style="margin:0; text-align:center;">Analyse des conditions...</p>`;
+    }
+
+    try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data && data.hourly && data.hourly.time) {
+            const times: string[] = data.hourly.time;
+            let targetIndex = 0;
+            
+            if (timeInput) {
+                const targetTimestamp = new Date(timeInput).getTime();
+                let minDiff = Infinity;
+                times.forEach((t, index) => {
+                    const diff = Math.abs(new Date(t.endsWith('Z') ? t : t + 'Z').getTime() - targetTimestamp);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        targetIndex = index;
+                    }
+                });
+            }
+
+            const temp = data.hourly.temperature_2m[targetIndex];
+            const windSpeed = data.hourly.wind_speed_10m[targetIndex];
+            const windGusts = data.hourly.wind_gusts_10m[targetIndex];
+            const precipitation = data.hourly.precipitation[targetIndex];
+            const forecastTime = times[targetIndex].replace('T', ' ');
+
+            // Évaluation météo
+            let statusText = "Conditions Favorables";
+            let statusClass = "bg-green";
+
+            if (windSpeed > 45 || windGusts > 65 || precipitation > 2.0) {
+                statusText = "Conditions Sévères";
+                statusClass = "bg-red";
+            } else if (windSpeed >= 30 || windGusts >= 45 || precipitation > 0) {
+                statusText = "Conditions Dégradées";
+                statusClass = "bg-orange";
+            }
+
+            if (cardContainer) {
+                cardContainer.innerHTML = `
+                    <div class="weather-status-box ${statusClass}">
+                        <span class="status-dot"></span>
+                        <span>${statusText}</span>
+                    </div>
+                    <div class="weather-details">
+                        <div>Temp : <strong>${temp}°C</strong></div>
+                        <div>Vent : <strong>${windSpeed} km/h</strong></div>
+                        <div>Rafales : <strong>${windGusts} km/h</strong></div>
+                        <div>Pluie : <strong>${precipitation} mm/h</strong></div>
+                    </div>
+                    <p class="help-text" style="margin: 6px 0 0 0; font-size: 0.72em; text-align: center;">
+                        ${forecastTime} | ${sourceLabel}
+                    </p>
+                `;
+            }
+        }
+    } catch (error) {
+        if (cardContainer) {
+            cardContainer.innerHTML = `<p class="help-text" style="color: var(--text-danger); margin:0; text-align:center;">Erreur de chargement</p>`;
+        }
+    }
+}

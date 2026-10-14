@@ -1,56 +1,66 @@
 :root {
-    /* Thème Gendarmerie */
-    --gendarmerie-dark: #0A1E3F;    /* Bleu Marine profond */
-    --gendarmerie-hover: #163262;   /* Bleu Marine (survol) */
-    --gendarmerie-accent: #3A6EA5;  /* Bleu intermédiaire */
-    --bg-main: #F4F6F9;             /* Gris-bleu très clair pour le fond */
+    /* Charte Graphique Gendarmerie Nationale */
+    --gendarmerie-navy: #0A1E3F;
+    --gendarmerie-navy-hover: #142C54;
+    --gendarmerie-steel: #3A6EA5;
+    --gendarmerie-steel-hover: #2C5788;
+    --gendarmerie-light: #EBF2FA;
+    
+    --bg-main: #F4F6F9;
     --bg-panel: #FFFFFF;
-    --border-color: #E2E8F0;
-    --text-main: #1E293B;
-    --text-muted: #64748B;
+    --border-color: #CBD5E1;
+    --border-focus: #3A6EA5;
+    
+    --text-dark: #0F172A;
+    --text-muted: #475569;
+    --text-danger: #B91C1C;
+    
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(10, 30, 63, 0.1), 0 1px 2px rgba(10, 30, 63, 0.06);
 }
 
 body { 
     margin: 0; 
     padding: 20px; 
     background-color: var(--bg-main); 
-    font-family: system-ui, -apple-system, sans-serif; 
-    color: var(--text-main);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; 
+    color: var(--text-dark);
 }
 
 #main-container { 
     display: flex; 
     flex-direction: column; 
     gap: 20px; 
-    max-width: 1400px; 
+    max-width: 1440px; 
     margin: 0 auto; 
 }
 
 /* ======================================= */
-/* TOP SECTION                             */
+/* SECTION SUPÉRIEURE : CARTE & TRACÉ     */
 /* ======================================= */
 #top-section { 
     display: flex; 
     gap: 20px; 
     height: 60vh; 
+    min-height: 450px;
 }
 
 #sidebar-top { 
     flex: 1; 
     background: var(--bg-panel); 
     padding: 20px; 
-    border-radius: 8px; 
-    box-shadow: 0 2px 4px rgba(10, 30, 63, 0.08); 
+    border-radius: var(--radius); 
+    box-shadow: var(--shadow); 
     border: 1px solid var(--border-color);
     overflow-y: auto; 
 }
 
 #map { 
     flex: 3; 
-    border-radius: 8px; 
-    box-shadow: 0 2px 4px rgba(10, 30, 63, 0.08); 
+    border-radius: var(--radius); 
+    box-shadow: var(--shadow); 
     border: 1px solid var(--border-color);
-    background: #e5e5e5; 
+    background: #E2E8F0; 
     z-index: 1; 
 }
 
@@ -59,7 +69,7 @@ body {
 }
 
 /* ======================================= */
-/* BOTTOM SECTION                          */
+/* SECTION INFÉRIEURE : PANNEAUX           */
 /* ======================================= */
 #bottom-section { 
     display: flex; 
@@ -70,121 +80,293 @@ body {
     flex: 1; 
     background: var(--bg-panel); 
     padding: 20px; 
-    border-radius: 8px; 
-    box-shadow: 0 2px 4px rgba(10, 30, 63, 0.08);
+    border-radius: var(--radius); 
+    box-shadow: var(--shadow);
     border: 1px solid var(--border-color); 
 }
 
 h2, h3, h4 {
-    color: var(--gendarmerie-dark);
+    color: var(--gendarmerie-navy);
     margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
+h2 { font-size: 1.25rem; border-bottom: 2px solid var(--gendarmerie-navy); padding-bottom: 8px; }
+h3 { font-size: 1.15rem; border-bottom: 2px solid var(--gendarmerie-steel); padding-bottom: 6px; }
+h4 { font-size: 1rem; margin-top: 10px; }
+
 /* ======================================= */
-/* REUSABLE UI ELEMENTS                    */
+/* DISPOSITION ET ÉLÉMENTS DE FORMULAIRE   */
 /* ======================================= */
 .control-group { 
     margin-bottom: 15px; 
-    padding-bottom: 15px; 
-    border-bottom: 1px solid var(--border-color); 
-}
-.control-group:last-child { 
-    border-bottom: none; 
-    margin-bottom: 0; 
-    padding-bottom: 0; 
 }
 
-.help-text { font-size: 0.85em; color: var(--text-muted); margin: 10px 0 5px 0; }
+.control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
 
-.search-box, .coords-inputs { display: flex; gap: 10px; }
-.search-box input { margin-bottom: 0; flex: 1; }
+.help-text { 
+    font-size: 0.85em; 
+    color: var(--text-muted); 
+    margin: 6px 0; 
+}
+
+.search-box, .coords-inputs, .input-action-group { 
+    display: flex; 
+    gap: 8px; 
+}
+
+.search-box input, .input-action-group input { 
+    flex: 1; 
+    margin-bottom: 0;
+}
+
+label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+}
 
 input[type="number"], input[type="text"] { 
     width: 100%; 
     box-sizing: border-box; 
-    padding: 8px; 
-    margin-bottom: 10px; 
-    border: 1px solid #CBD5E1; 
-    border-radius: 4px; 
-    color: var(--text-main);
+    padding: 8px 12px; 
+    border: 1px solid var(--border-color); 
+    border-radius: var(--radius); 
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    background-color: var(--bg-panel);
+    transition: border-color 0.15s ease-in-out;
 }
+
 input[type="number"]:focus, input[type="text"]:focus {
     outline: none;
-    border-color: var(--gendarmerie-accent);
-    box-shadow: 0 0 0 2px rgba(58, 110, 165, 0.2);
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.15);
 }
 
 input[type="range"] { 
     width: 100%; 
-    margin-top: 5px; 
+    margin-top: 6px; 
     cursor: pointer; 
-    accent-color: var(--gendarmerie-dark);
+    accent-color: var(--gendarmerie-navy);
 }
 
-/* --- THEME BUTTONS --- */
+.badge {
+    display: inline-block;
+    background-color: var(--gendarmerie-light);
+    color: var(--gendarmerie-navy);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--gendarmerie-steel);
+}
+
+/* ======================================= */
+/* BOUTONS                                 */
+/* ======================================= */
 button { 
-    background: var(--gendarmerie-dark); 
-    color: white; 
-    border: 1px solid var(--gendarmerie-dark); 
-    padding: 10px 12px; 
-    border-radius: 4px; 
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 9px 14px; 
+    border-radius: var(--radius); 
     cursor: pointer; 
     width: 100%; 
-    margin-bottom: 5px; 
-    transition: all 0.2s; 
-    font-weight: 500;
-}
-button:hover { 
-    background: var(--gendarmerie-hover); 
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    border: 1px solid transparent;
 }
 
-/* Boutons secondaires (Effacer, etc.) : Fond blanc, texte et bordure bleus */
-button.danger { 
-    background: white; 
-    color: var(--gendarmerie-dark); 
+/* Bouton principal */
+.btn-primary, button:not([class]) { 
+    background-color: var(--gendarmerie-navy); 
+    color: white; 
+    border-color: var(--gendarmerie-navy);
+}
+.btn-primary:hover, button:not([class]):hover { 
+    background-color: var(--gendarmerie-navy-hover); 
+}
+
+/* Bouton d'action importante (Calculer) */
+.btn-action {
+    background-color: var(--gendarmerie-steel);
+    color: white;
+    border-color: var(--gendarmerie-steel);
+    font-size: 0.95rem;
+    padding: 11px 16px;
+}
+.btn-action:hover {
+    background-color: var(--gendarmerie-steel-hover);
+}
+
+/* Bouton secondaire */
+.btn-secondary, .btn-search { 
+    background-color: var(--gendarmerie-light); 
+    color: var(--gendarmerie-navy); 
+    border: 1px solid var(--gendarmerie-steel);
+    width: auto;
+    white-space: nowrap;
+}
+.btn-secondary:hover, .btn-search:hover { 
+    background-color: var(--gendarmerie-steel); 
+    color: white;
+}
+
+/* Bouton d'action destructive ou de réinitialisation */
+.btn-danger { 
+    background-color: white; 
+    color: var(--text-danger); 
     border: 1px solid var(--border-color); 
 }
-button.danger:hover { 
-    background: var(--bg-main); 
-    border-color: var(--gendarmerie-dark);
+.btn-danger:hover { 
+    background-color: #FEF2F2; 
+    border-color: #FCA5A5;
 }
 
-button.btn-search { 
-    width: auto; 
-    background: var(--gendarmerie-accent); 
-    border-color: var(--gendarmerie-accent);
-}
-button.btn-search:hover { 
-    background: var(--gendarmerie-dark); 
-}
-
+/* État actif du bouton de dessin */
 #draw-toggle-btn.active { 
-    background: var(--gendarmerie-accent); 
-    border-color: var(--gendarmerie-dark); 
-    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.2);
+    background-color: var(--gendarmerie-steel); 
+    color: white;
+    border-color: var(--gendarmerie-navy); 
 }
 
-ul { padding-left: 20px; font-size: 0.9em; color: var(--text-main); margin-top: 5px;}
-ul li { margin-bottom: 8px; }
+/* ======================================= */
+/* LISTES ET RÉSULTATS                     */
+/* ======================================= */
+ul { 
+    padding-left: 0; 
+    list-style: none;
+    font-size: 0.88rem; 
+    color: var(--text-dark); 
+    margin: 8px 0;
+    max-height: 140px;
+    overflow-y: auto;
+}
+
+ul li { 
+    padding: 6px 10px;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 ul li button { 
     width: auto; 
-    padding: 4px 8px; 
-    font-size: 0.9em; 
-    background: white;
-    color: var(--gendarmerie-dark);
+    padding: 3px 8px; 
+    font-size: 0.8rem; 
+    background-color: white;
+    color: var(--gendarmerie-navy);
     border: 1px solid var(--border-color);
 }
 ul li button:hover {
-    background: var(--bg-main);
-    border-color: var(--gendarmerie-accent);
+    background-color: var(--gendarmerie-light);
+    border-color: var(--gendarmerie-steel);
 }
 
-/* Boîte de résultat */
 .result-box {
     margin-top: 15px; 
-    padding: 15px; 
-    background: var(--bg-main); 
-    border-radius: 6px; 
-    border: 1px solid var(--border-color);
+    padding: 12px 16px; 
+    background-color: var(--gendarmerie-light); 
+    border-radius: var(--radius); 
+    border: 1px solid var(--gendarmerie-steel);
     text-align: center;
+}
+
+.result-value {
+    color: var(--gendarmerie-navy); 
+    font-weight: 700; 
+    font-size: 1.15rem;
+    margin-left: 6px;
+}
+/* ======================================= */
+/* WIDGET MÉTÉO (THÈME GENDARMERIE)        */
+/* ======================================= */
+#map {
+    position: relative; /* Indispensable pour ancrer le widget sur la carte */
+}
+
+.weather-floating-card {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: var(--bg-panel);
+    padding: 12px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    width: 260px;
+    font-size: 0.85rem;
+}
+
+.weather-header {
+    font-weight: 600;
+    color: var(--gendarmerie-navy);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.weather-time-container input {
+    width: 100%;
+    padding: 6px;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.weather-card {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.weather-status-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 0.82rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: white;
+    display: inline-block;
+}
+
+.bg-green { background-color: #16A34A; }
+.bg-orange { background-color: #D97706; }
+.bg-red { background-color: #DC2626; }
+.bg-gray { background-color: #64748B; }
+
+.weather-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-dark);
+}
+
+.btn-sm {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    margin-bottom: 0;
 }
