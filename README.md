@@ -1,7 +1,7 @@
 
 # Projet : Système de Déploiement Optimisé de Drones
 
-## 1.Contexte et Objectifs (Background)
+## 1.Contexte et Objectifs
 Ce projet propose une solution logicielle pour optimiser et simuler le déploiement de drones de surveillance ou d'intervention dans une zone géographique dédiée. En fonction des paramètres de mission (météo, contraintes de terrain, portée du matériel), le système permet de discrétiser le territoire et de calculer le positionnement idéal des téléopérateurs et des drones.
 
 ## 2.Installation 
