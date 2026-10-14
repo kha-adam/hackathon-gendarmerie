@@ -31,7 +31,7 @@ export class Grille {
         @param margeKm Marge supplémentaire à ajouter autour de la zone (en kilomètres)
         @returns Grille
      */
-    public static newGrid(precision: `number`, zone: ZoneCouverte, margeKm: number = 0.1): Grille {
+    public static newGrid(precision: number, zone: ZoneCouverte, margeKm: number = 0.1): Grille {
         const featureZone = turf.feature(zone.geometry);
         
         // 1. Calcul de la Bounding Box de base (min longitude, min latitude, max longitude, max latitude)
