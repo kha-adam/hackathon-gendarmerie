@@ -1,6 +1,6 @@
 import * as L from 'leaflet';
 import * as turf from '@turf/turf';
-import { CoverageOptimizer } from './algo_remplissage.ts';
+import { CoverageOptimizer } from './algo_remplissage';
 // Selon l'architecture de votre coéquipier, importez aussi ZoneCouverte si nécessaire :
 // import { ZoneCouverte } from './ZoneCouverte';
 
