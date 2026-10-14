@@ -1,5 +1,5 @@
 import * as turf from '@turf/turf';
-import { Feature, Point as GeoJSONPoint, FeatureCollection } from 'geojson';
+import { Feature, Point as GeoJSONPoint, FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { Point } from './Point';
 import { ZoneCouverte } from './ZoneCouverte';
 
@@ -9,7 +9,9 @@ export class Grille {
     constructor(points: Point[] = []) {
         this.points = points;
     }
-    /* Convertit la grille en un tableau de Features GeoJSON
+
+    /**
+     * Convertit la grille en un tableau de Features GeoJSON
      * Compatible à 100% avec le type de pointGrid.features
      */
     public toFeatures(): Feature<GeoJSONPoint>[] {
@@ -24,46 +26,45 @@ export class Grille {
     }
 
     /**
-     * Génère une grille de points basée sur les extremums (min/max) de la zone, 
-        avec une marge pour couvrir un peu plus de terrain.
+        Génère une grille de points strictement inclus dans la zone couverte.
+        
         @param precision Distance entre les points (en kilomètres)
-        @param zone La ZoneCouverte (Polygone GeoJSON)
-        @param margeKm Marge supplémentaire à ajouter autour de la zone (en kilomètres)
+        @param zone La ZoneCouverte (Polygone ou MultiPolygone GeoJSON)
+        @param margeKm Marge optionnelle à ajouter au polygone (0 par défaut)
         @returns Grille
      */
-    public static newGrid(precision: number, zone: ZoneCouverte, margeKm: number = 0.1): Grille {
-        const featureZone = turf.feature(zone.geometry);
-        
-        // 1. Calcul de la Bounding Box de base (min longitude, min latitude, max longitude, max latitude)
-        const baseBbox = turf.bbox(featureZone);
+    public static newGrid(precision: number, zone: ZoneCouverte, margeKm: number = 0): Grille {
+        // 1. Initialiser la zone cible à partir du polygone
+        let zoneCible: Feature<Polygon | MultiPolygon> = turf.feature(zone.geometry);
 
-        // 2. Transformer cette Bounding Box en Polygone rectangulaire pour pouvoir l'agrandir
-        const bboxPolygon = turf.bboxPolygon(baseBbox);
+        // 2. Si une marge positive est spécifiée, agrandir directement le polygone
+        if (margeKm > 0) {
+            const buffered = turf.buffer(zoneCible, margeKm, { units: 'kilometers' });
+            if (buffered) {
+                zoneCible = buffered;
+            }
+        }
 
-        // 3. Ajouter la marge ("couvrir un peu plus, mais pas trop loin")
-        const expandedPolygon = turf.buffer(bboxPolygon, margeKm, { units: 'kilometers' });
+        // 3. Calculer la Bounding Box du polygone pour générer la grille de base
+        const bbox = turf.bbox(zoneCible);
 
-        // 4. Recalculer la nouvelle Bounding Box agrandie
-        const expandedBbox = turf.bbox(expandedPolygon as turf.AllGeoJSON);
-
-        // 5. Générer la grille sur cette nouvelle zone rectangulaire élargie
+        // 4. Générer la grille de points sur le rectangle
         const options: { units: turf.Units } = { units: 'kilometers' };
-        const gridCollection = turf.pointGrid(expandedBbox, precision, options);
+        const gridCollection = turf.pointGrid(bbox, precision, options);
 
         const grillePoints: Point[] = [];
 
-        // 6. On récupère tous les points de cette grille rectangulaire
-        // (On retire le filtre booleanPointInPolygon car vous voulez parcourir la zone min/max entière)
+        // 5. Filtrer : garder uniquement les points qui tombent DANS le polygone
         for (const featurePoint of gridCollection.features) {
-            const [lon, lat] = featurePoint.geometry.coordinates;
-            grillePoints.push(new Point(lon, lat));
+            if (turf.booleanPointInPolygon(featurePoint.geometry, zoneCible)) {
+                const [lon, lat] = featurePoint.geometry.coordinates;
+                grillePoints.push(new Point(lon, lat));
+            }
         }
-        // 7. MÉLANGE ALÉATOIRE (Algorithme de Fisher-Yates)
-        // pour optimiser l'algo de recherche
+
+        // 6. Mélange aléatoire (Fisher-Yates)
         for (let i = grillePoints.length - 1; i > 0; i--) {
-            // Choix d'un index aléatoire entre 0 et i
             const j = Math.floor(Math.random() * (i + 1));
-            // Échange des éléments à l'index i et j
             [grillePoints[i], grillePoints[j]] = [grillePoints[j], grillePoints[i]];
         }
 
