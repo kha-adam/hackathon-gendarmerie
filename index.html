@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,13 +15,26 @@
         <div id="sidebar">
             <h2>Coverage Area</h2>
             
+            <!-- BARRE DE RECHERCHE -->
+            <div class="control-group">
+                <label for="search-input"><strong>🔍 Rechercher une région / zone :</strong></label>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Ex: Occitanie, Toulouse, Paris..." onkeydown="if(event.key === 'Enter') searchLocation()">
+                    <button type="button" onclick="searchLocation()" class="btn-search">Chercher</button>
+                </div>
+                <p id="search-status" class="help-text"></p>
+            </div>
+
+            <!-- TRACÉ MANUEL ET PAR CLIC -->
             <div class="control-group">
                 <button id="draw-toggle-btn" onclick="toggleDrawingMode()">
                     📍 Enable Map Click Drawing
                 </button>
                 <p class="help-text">Or add manually:</p>
-                <input type="number" id="lat" placeholder="Lat" step="0.001" value="43.604">
-                <input type="number" id="lng" placeholder="Lng" step="0.001" value="1.444">
+                <div class="coords-inputs">
+                    <input type="number" id="lat" placeholder="Lat" step="0.001" value="43.604">
+                    <input type="number" id="lng" placeholder="Lng" step="0.001" value="1.444">
+                </div>
                 <button onclick="addPointFromInput()">Add Point</button>
             </div>
 
