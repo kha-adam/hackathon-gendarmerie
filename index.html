@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drone Coverage Planner</title>
+    <title>Gendarmerie - Couverture Drone</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Custom CSS -->
@@ -11,65 +11,77 @@
 </head>
 <body>
 
-    <div id="dashboard">
-        <div id="sidebar">
-            <h2>Coverage Area</h2>
-            
-            <!-- BARRE DE RECHERCHE -->
-            <div class="control-group">
-                <label for="search-input"><strong>🔍 Rechercher une région / zone :</strong></label>
-                <div class="search-box">
-                    <input type="text" id="search-input" placeholder="Ex: Occitanie, Toulouse, Paris...">
-                    <button type="button" id="btn-search" class="btn-search">Chercher</button>
-                </div>
-                <p id="search-status" class="help-text"></p>
-            </div>
-
-            <!-- TRACÉ MANUEL ET PAR CLIC -->
-            <div class="control-group">
-                <button id="draw-toggle-btn">Draw the zone</button>
-                <p class="help-text">Or add manually:</p>
-                <div class="coords-inputs">
-                    <input type="number" id="lat" placeholder="Lat" step="0.001" value="43.604">
-                    <input type="number" id="lng" placeholder="Lng" step="0.001" value="1.444">
-                </div>
-                <button id="btn-add-point">Add Point</button>
-            </div>
-
-            <div class="control-group">
-                <strong>Zone Points:</strong>
-                <ul id="point-list"></ul>
-                <button class="danger" id="btn-clear-area">Clear Area</button>
-            </div>
-
-            <!-- GESTION DES ZONES -->
-            <div class="control-group">
-                <button id="btn-save-zone" style="background-color: #28a745;"> Sauvegarder en GeoJSON</button>
-            </div>
-
-            <div class="control-group">
-                <h3>Zones Sauvegardées</h3>
-                <ul id="saved-zones-list">
-                    <!-- La liste des zones s'affichera ici dynamiquement via TypeScript -->
-                </ul>
-                <button class="danger" id="btn-clear-zones">Delete</button>
-            </div>
-            <div class="control-group">
-    <h3>🚀 Auto-Déploiement</h3>
-    
-    <label>Téléopérateurs Niv 1 (ex: 2km) : <span id="val-t1">1</span></label>
-    <input type="range" id="slider-t1" min="0" max="5" value="1" oninput="document.getElementById('val-t1').innerText = this.value">
-    
-    <label>Téléopérateurs Niv 2 (ex: 5km) : <span id="val-t2">1</span></label>
-    <input type="range" id="slider-t2" min="0" max="5" value="1" oninput="document.getElementById('val-t2').innerText = this.value">
-    
-    <button id="btn-optimize" style="background-color: #ffc107; color: black; margin-top: 10px;">Lancer l'Algorithme</button>
-    
-    <p style="font-size: 1.1em;"><strong>Couverture estimée : </strong><span id="coverage-result" style="color: #28a745;">0%</span></p>
-</div>
-        </div>
+    <div id="main-container">
         
-        <div id="map"></div>
+        <div id="top-section">
+            <div id="sidebar-top">
+                <h2>Contrôles de la Carte</h2>
+                
+                <div class="control-group">
+                    <label for="search-input"><strong>Rechercher :</strong></label>
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Ex: Toulouse...">
+                        <button type="button" id="btn-search" class="btn-search">Chercher</button>
+                    </div>
+                    <p id="search-status" class="help-text"></p>
+                </div>
+
+                <div class="control-group">
+                    <button id="draw-toggle-btn">Activer Dessin par Clic</button>
+                    <p class="help-text">Ou ajouter manuellement :</p>
+                    <div class="coords-inputs">
+                        <input type="number" id="lat" placeholder="Lat" step="0.001" value="43.604">
+                        <input type="number" id="lng" placeholder="Lng" step="0.001" value="1.444">
+                    </div>
+                    <button id="btn-add-point">Ajouter Point</button>
+                </div>
+
+                <div class="control-group">
+                    <strong>Points du polygone :</strong>
+                    <ul id="point-list"></ul>
+                    <button class="danger" id="btn-clear-area">Effacer le tracé actuel</button>
+                </div>
+            </div>
+            
+            <div id="map"></div>
+        </div>
+
+        <div id="bottom-section">
+            
+            <div class="bottom-panel">
+                <h3>Gestion des Zones</h3>
+                <div class="control-group">
+                    <button id="btn-save-zone">Enregistrer la zone</button>
+                </div>
+
+                <div class="control-group">
+                    <h4>Zones Sauvegardées</h4>
+                    <ul id="saved-zones-list"></ul>
+                    <button class="danger" id="btn-clear-zones" style="margin-top: 10px;">Effacer l'historique</button>
+                </div>
+            </div>
+
+            <div class="bottom-panel">
+                <h3>Algorithme de Couverture</h3>
+                
+                <div class="control-group">
+                    <label>Téléopérateurs Niv 1 (Rayon 2km) : <span id="val-t1" style="font-weight: bold;">1</span></label>
+                    <input type="range" id="slider-t1" min="0" max="5" value="1" oninput="document.getElementById('val-t1').innerText = this.value">
+                </div>
+                
+                <div class="control-group">
+                    <label>Téléopérateurs Niv 2 (Rayon 5km) : <span id="val-t2" style="font-weight: bold;">1</span></label>
+                    <input type="range" id="slider-t2" min="0" max="5" value="1" oninput="document.getElementById('val-t2').innerText = this.value">
+                </div>
+                
+                <button id="btn-optimize">Lancer le calcul d'optimisation</button>
+                
+                <div class="result-box">
+                    <span style="font-size: 1.1em;"><strong>Couverture estimée : </strong><span id="coverage-result" style="color: var(--gendarmerie-dark); font-weight: bold; font-size: 1.2em;">0%</span></span>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <!-- Custom JS -->

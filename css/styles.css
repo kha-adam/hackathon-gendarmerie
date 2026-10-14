@@ -1,125 +1,190 @@
+:root {
+    /* Thème Gendarmerie */
+    --gendarmerie-dark: #0A1E3F;    /* Bleu Marine profond */
+    --gendarmerie-hover: #163262;   /* Bleu Marine (survol) */
+    --gendarmerie-accent: #3A6EA5;  /* Bleu intermédiaire */
+    --bg-main: #F4F6F9;             /* Gris-bleu très clair pour le fond */
+    --bg-panel: #FFFFFF;
+    --border-color: #E2E8F0;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+}
+
 body { 
     margin: 0; 
     padding: 20px; 
-    background-color: #f0f2f5; 
-    font-family: system-ui, sans-serif; 
+    background-color: var(--bg-main); 
+    font-family: system-ui, -apple-system, sans-serif; 
+    color: var(--text-main);
 }
 
-#dashboard { 
+#main-container { 
     display: flex; 
+    flex-direction: column; 
     gap: 20px; 
     max-width: 1400px; 
     margin: 0 auto; 
-    height: 85vh; 
 }
 
-/* Sidebar */
-#sidebar { 
+/* ======================================= */
+/* TOP SECTION                             */
+/* ======================================= */
+#top-section { 
+    display: flex; 
+    gap: 20px; 
+    height: 60vh; 
+}
+
+#sidebar-top { 
     flex: 1; 
-    background: white; 
+    background: var(--bg-panel); 
     padding: 20px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+    border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(10, 30, 63, 0.08); 
+    border: 1px solid var(--border-color);
     overflow-y: auto; 
 }
 
+#map { 
+    flex: 3; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(10, 30, 63, 0.08); 
+    border: 1px solid var(--border-color);
+    background: #e5e5e5; 
+    z-index: 1; 
+}
+
+#map.drawing-mode { 
+    cursor: crosshair; 
+}
+
+/* ======================================= */
+/* BOTTOM SECTION                          */
+/* ======================================= */
+#bottom-section { 
+    display: flex; 
+    gap: 20px; 
+}
+
+.bottom-panel { 
+    flex: 1; 
+    background: var(--bg-panel); 
+    padding: 20px; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(10, 30, 63, 0.08);
+    border: 1px solid var(--border-color); 
+}
+
+h2, h3, h4 {
+    color: var(--gendarmerie-dark);
+    margin-top: 0;
+}
+
+/* ======================================= */
+/* REUSABLE UI ELEMENTS                    */
+/* ======================================= */
 .control-group { 
     margin-bottom: 15px; 
     padding-bottom: 15px; 
-    border-bottom: 1px solid #eee; 
+    border-bottom: 1px solid var(--border-color); 
 }
-
-.help-text { 
-    font-size: 0.85em; 
-    color: #666; 
-    margin: 6px 0 0 0; 
-}
-
-/* Search Box */
-.search-box { 
-    display: flex; 
-    gap: 8px; 
-    margin-top: 8px; 
-}
-
-.btn-search { 
-    width: auto !important; 
-    white-space: nowrap; 
-    margin-bottom: 0 !important; 
-}
-
-/* Inputs and Buttons */
-input[type="text"], input[type="number"] { 
-    padding: 8px; 
-    border: 1px solid #ccc; 
-    border-radius: 4px; 
-    box-sizing: border-box;
-}
-
-input[type="text"] { 
-    width: 100%; 
-}
-
-.coords-inputs { 
-    display: flex; 
-    gap: 8px; 
-    margin-bottom: 10px; 
-}
-
-.coords-inputs input[type="number"] { 
-    width: 50%; 
+.control-group:last-child { 
+    border-bottom: none; 
     margin-bottom: 0; 
+    padding-bottom: 0; 
 }
 
+.help-text { font-size: 0.85em; color: var(--text-muted); margin: 10px 0 5px 0; }
+
+.search-box, .coords-inputs { display: flex; gap: 10px; }
+.search-box input { margin-bottom: 0; flex: 1; }
+
+input[type="number"], input[type="text"] { 
+    width: 100%; 
+    box-sizing: border-box; 
+    padding: 8px; 
+    margin-bottom: 10px; 
+    border: 1px solid #CBD5E1; 
+    border-radius: 4px; 
+    color: var(--text-main);
+}
+input[type="number"]:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--gendarmerie-accent);
+    box-shadow: 0 0 0 2px rgba(58, 110, 165, 0.2);
+}
+
+input[type="range"] { 
+    width: 100%; 
+    margin-top: 5px; 
+    cursor: pointer; 
+    accent-color: var(--gendarmerie-dark);
+}
+
+/* --- THEME BUTTONS --- */
 button { 
-    background: #007bff; 
+    background: var(--gendarmerie-dark); 
     color: white; 
-    border: none; 
+    border: 1px solid var(--gendarmerie-dark); 
     padding: 10px 12px; 
     border-radius: 4px; 
     cursor: pointer; 
     width: 100%; 
     margin-bottom: 5px; 
-    transition: background 0.2s; 
+    transition: all 0.2s; 
+    font-weight: 500;
 }
-
 button:hover { 
-    background: #0056b3; 
+    background: var(--gendarmerie-hover); 
 }
 
+/* Boutons secondaires (Effacer, etc.) : Fond blanc, texte et bordure bleus */
 button.danger { 
-    background: #dc3545; 
+    background: white; 
+    color: var(--gendarmerie-dark); 
+    border: 1px solid var(--border-color); 
 }
-
 button.danger:hover { 
-    background: #c82333; 
+    background: var(--bg-main); 
+    border-color: var(--gendarmerie-dark);
 }
 
-/* Active State for the Draw Mode Button */
+button.btn-search { 
+    width: auto; 
+    background: var(--gendarmerie-accent); 
+    border-color: var(--gendarmerie-accent);
+}
+button.btn-search:hover { 
+    background: var(--gendarmerie-dark); 
+}
+
 #draw-toggle-btn.active { 
-    background: #28a745; 
-    border: 2px solid #1e7e34; 
+    background: var(--gendarmerie-accent); 
+    border-color: var(--gendarmerie-dark); 
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.2);
 }
 
-ul { 
-    padding-left: 20px; 
+ul { padding-left: 20px; font-size: 0.9em; color: var(--text-main); margin-top: 5px;}
+ul li { margin-bottom: 8px; }
+ul li button { 
+    width: auto; 
+    padding: 4px 8px; 
     font-size: 0.9em; 
-    color: #555; 
+    background: white;
+    color: var(--gendarmerie-dark);
+    border: 1px solid var(--border-color);
+}
+ul li button:hover {
+    background: var(--bg-main);
+    border-color: var(--gendarmerie-accent);
 }
 
-/* Map */
-#map { 
-    flex: 3; 
-    height: 100%;
-    min-height: 400px;
-    border-radius: 12px; 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-    background: #e5e5e5; 
-    z-index: 1; 
-    cursor: default; 
-}
-
-/* Change map cursor when drawing */
-#map.drawing-mode { 
-    cursor: crosshair; 
+/* Boîte de résultat */
+.result-box {
+    margin-top: 15px; 
+    padding: 15px; 
+    background: var(--bg-main); 
+    border-radius: 6px; 
+    border: 1px solid var(--border-color);
+    text-align: center;
 }

@@ -157,9 +157,9 @@ function updatePolygon() {
         targetPolygon.setLatLngs(currentPoints);
     } else {
         targetPolygon = L.polygon(currentPoints, {
-            color: '#28a745',
-            fillColor: '#28a745',
-            fillOpacity: 0.2
+            color: '#0A1E3F',       // Bleu Marine
+            fillColor: '#3A6EA5',   // Bleu Acier clair
+            fillOpacity: 0.15
         }).addTo(map);
     }
 }
@@ -187,10 +187,10 @@ function toggleDrawingMode() {
     const mapDiv = document.getElementById('map');
     
     if (isDrawingMode) {
-        if (btn) { btn.classList.add('active'); btn.innerText = "🛑 Stop Map Click Drawing"; }
+        if (btn) { btn.classList.add('active'); btn.innerText = "Stop Map Click Drawing"; }
         if (mapDiv) mapDiv.classList.add('drawing-mode');
     } else {
-        if (btn) { btn.classList.remove('active'); btn.innerText = "📍 Enable Map Click Drawing"; }
+        if (btn) { btn.classList.remove('active'); btn.innerText = "Enable Map Click Drawing"; }
         if (mapDiv) mapDiv.classList.remove('drawing-mode');
     }
 }
@@ -319,12 +319,13 @@ function renderSolution(solution: any) {
         const [lng, lat] = centerFeature.geometry.coordinates;
         
         const isLevel1 = radiusKm < 3;
-        const color = isLevel1 ? '#007bff' : '#ff9900';
+        // Niveau 1 = Bleu clair, Niveau 2 = Bleu très foncé
+        const color = isLevel1 ? '#3A6EA5' : '#0A1E3F';
 
         // Centre (Téléopérateur)
         L.circleMarker([lat, lng], {
             radius: 4,
-            color: 'black',
+            color: 'white',      // Bordure blanche pour le contraste
             fillColor: color,
             fillOpacity: 1,
             weight: 2
@@ -332,10 +333,10 @@ function renderSolution(solution: any) {
 
         // Zone de couverture du drone
         L.circle([lat, lng], {
-            radius: radiusKm * 1000, // Conversion km -> mètres pour Leaflet
+            radius: radiusKm * 1000, 
             color: color,
             fillColor: color,
-            fillOpacity: 0.25,
+            fillOpacity: 0.15,   // Très subtil
             weight: 1
         }).addTo(solutionLayerGroup);
     });
