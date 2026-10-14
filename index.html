@@ -54,19 +54,19 @@
                 </ul>
                 <button class="danger" id="btn-clear-zones">Delete</button>
             </div>
-            <div class="control-group" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;">
-                <h3>Optimisation du Déploiement</h3>
+            <div class="control-group">
+    <h3>🚀 Auto-Déploiement</h3>
     
-                <label>Opérateurs Niveau 1 (Rayon ~2km): <span id="val-l1">1</span></label>
-                <input type="range" id="slider-l1" min="0" max="10" value="1" style="width: 100%; margin-bottom: 10px;" oninput="document.getElementById('val-l1').innerText = this.value">
-
-                <label>Opérateurs Niveau 2 (Rayon ~5km): <span id="val-l2">0</span></label>
-                <input type="range" id="slider-l2" min="0" max="10" value="0" style="width: 100%; margin-bottom: 15px;" oninput="document.getElementById('val-l2').innerText = this.value">
-
-                <button id="btn-optimize" style="background-color: #6f42c1;">Lancer l'Algorithme</button>
+    <label>Téléopérateurs Niv 1 (ex: 2km) : <span id="val-t1">1</span></label>
+    <input type="range" id="slider-t1" min="0" max="5" value="1" oninput="document.getElementById('val-t1').innerText = this.value">
     
-                <h4 style="margin-top: 15px; color: #333;">Couverture estimée : <span id="coverage-text" style="color: #28a745;">0.00%</span></h4>
-            </div>
+    <label>Téléopérateurs Niv 2 (ex: 5km) : <span id="val-t2">1</span></label>
+    <input type="range" id="slider-t2" min="0" max="5" value="1" oninput="document.getElementById('val-t2').innerText = this.value">
+    
+    <button id="btn-optimize" style="background-color: #ffc107; color: black; margin-top: 10px;">Lancer l'Algorithme</button>
+    
+    <p style="font-size: 1.1em;"><strong>Couverture estimée : </strong><span id="coverage-result" style="color: #28a745;">0%</span></p>
+</div>
         </div>
         
         <div id="map"></div>
