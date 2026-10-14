@@ -149,7 +149,7 @@ function addPointToState(lat: number, lng: number) {
     const li = document.createElement('li');
     li.textContent = `[${lat.toFixed(4)}, ${lng.toFixed(4)}]`;
     document.getElementById('point-list')?.appendChild(li);
-
+    fetchWeatherData();
     updatePolygon();
 }
 
@@ -252,7 +252,10 @@ async function performSearch() {
             const lon = parseFloat(data[0].lon);
             
             map.setView([lat, lon], 12);
-            if (status) status.innerText = `Trouvé : ${data[0].display_name}`;
+            if (status) {
+                status.innerText = `Trouvé : ${data[0].display_name}`;
+                updateWeatherLocation(lat, lon);
+            }
         } else {
             if (status) status.innerText = "Aucun résultat trouvé.";
         }
@@ -518,3 +521,124 @@ function runFindMinTeleoperators() {
 
 // Attachement de l'événement (à ajouter avec les autres addEventListener en bas du fichier)
 document.getElementById('btn-find-min')?.addEventListener('click', runFindMinTeleoperators);
+// ==========================================
+// LOGIQUE MÉTÉO & DÉCISION DRONE
+// ==========================================
+
+let lastSearchCoords: { lat: number, lng: number } | null = null;
+
+// Initialisation au chargement du DOM
+window.addEventListener('DOMContentLoaded', () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    const datetimeInput = document.getElementById('weather-time') as HTMLInputElement;
+    if (datetimeInput) {
+        datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        datetimeInput.addEventListener('change', () => fetchWeatherData());
+    }
+
+    document.getElementById('btn-refresh-weather')?.addEventListener('click', () => fetchWeatherData());
+    
+    // Chargement initial pour la position par défaut
+    fetchWeatherData();
+});
+
+export async function updateWeatherLocation(lat: number, lng: number) {
+    lastSearchCoords = { lat, lng };
+    await fetchWeatherData();
+}
+
+async function fetchWeatherData() {
+    const widgetEl = document.getElementById('weather-widget');
+    const timeInput = (document.getElementById('weather-time') as HTMLInputElement)?.value;
+
+    if (!widgetEl) return;
+
+    let lat = 43.604;
+    let lng = 1.444;
+    let sourceLabel = "Position par défaut";
+
+    if (currentPoints.length > 0) {
+        const lastPoint = currentPoints[currentPoints.length - 1];
+        lat = lastPoint[0];
+        lng = lastPoint[1];
+        sourceLabel = "Zone Polygone";
+    } else if (lastSearchCoords) {
+        lat = lastSearchCoords.lat;
+        lng = lastSearchCoords.lng;
+        sourceLabel = "Zone de Recherche";
+    }
+
+    const cardContainer = widgetEl.querySelector('.weather-card');
+    if (cardContainer) {
+        cardContainer.innerHTML = `<p class="help-text" style="margin:0; text-align:center;">Analyse des conditions...</p>`;
+    }
+
+    try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data && data.hourly && data.hourly.time) {
+            const times: string[] = data.hourly.time;
+            let targetIndex = 0;
+            
+            if (timeInput) {
+                const targetTimestamp = new Date(timeInput).getTime();
+                let minDiff = Infinity;
+                times.forEach((t, index) => {
+                    const diff = Math.abs(new Date(t.endsWith('Z') ? t : t + 'Z').getTime() - targetTimestamp);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        targetIndex = index;
+                    }
+                });
+            }
+
+            const temp = data.hourly.temperature_2m[targetIndex];
+            const windSpeed = data.hourly.wind_speed_10m[targetIndex];
+            const windGusts = data.hourly.wind_gusts_10m[targetIndex];
+            const precipitation = data.hourly.precipitation[targetIndex];
+            const forecastTime = times[targetIndex].replace('T', ' ');
+
+            // Évaluation météo
+            let statusText = "Conditions Favorables";
+            let statusClass = "bg-green";
+
+            if (windSpeed > 45 || windGusts > 65 || precipitation > 2.0) {
+                statusText = "Conditions Sévères";
+                statusClass = "bg-red";
+            } else if (windSpeed >= 30 || windGusts >= 45 || precipitation > 0) {
+                statusText = "Conditions Dégradées";
+                statusClass = "bg-orange";
+            }
+
+            if (cardContainer) {
+                cardContainer.innerHTML = `
+                    <div class="weather-status-box ${statusClass}">
+                        <span class="status-dot"></span>
+                        <span>${statusText}</span>
+                    </div>
+                    <div class="weather-details">
+                        <div>Temp : <strong>${temp}°C</strong></div>
+                        <div>Vent : <strong>${windSpeed} km/h</strong></div>
+                        <div>Rafales : <strong>${windGusts} km/h</strong></div>
+                        <div>Pluie : <strong>${precipitation} mm/h</strong></div>
+                    </div>
+                    <p class="help-text" style="margin: 6px 0 0 0; font-size: 0.72em; text-align: center;">
+                        ${forecastTime} | ${sourceLabel}
+                    </p>
+                `;
+            }
+        }
+    } catch (error) {
+        if (cardContainer) {
+            cardContainer.innerHTML = `<p class="help-text" style="color: var(--text-danger); margin:0; text-align:center;">Erreur de chargement</p>`;
+        }
+    }
+}

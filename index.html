@@ -48,7 +48,22 @@
                 </div>
             </div>
             
-            <div id="map"></div>
+            <div id="map">
+    <!-- WIDGET MÉTÉO EMBARQUÉ SUR LA CARTE -->
+    <div id="weather-widget" class="weather-floating-card">
+        <div class="weather-header">Météo & Conditions de vol</div>
+       
+        <div class="weather-time-container">
+            <input type="datetime-local" id="weather-time">
+        </div>
+
+        <div class="weather-card">
+            <p class="help-text" style="margin: 0; text-align: center;">Sélectionnez ou tracez une zone...</p>
+        </div>
+       
+        <button type="button" id="btn-refresh-weather" class="btn-secondary btn-sm">Actualiser la météo</button>
+    </div>
+</div>
         </div>
 
         <!-- SECTION INFÉRIEURE : GESTION DES ZONES ET ALGORITHME -->

@@ -289,3 +289,84 @@ ul li button:hover {
     font-size: 1.15rem;
     margin-left: 6px;
 }
+/* ======================================= */
+/* WIDGET MÉTÉO (THÈME GENDARMERIE)        */
+/* ======================================= */
+#map {
+    position: relative; /* Indispensable pour ancrer le widget sur la carte */
+}
+
+.weather-floating-card {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: var(--bg-panel);
+    padding: 12px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    width: 260px;
+    font-size: 0.85rem;
+}
+
+.weather-header {
+    font-weight: 600;
+    color: var(--gendarmerie-navy);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.weather-time-container input {
+    width: 100%;
+    padding: 6px;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.weather-card {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.weather-status-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 0.82rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: white;
+    display: inline-block;
+}
+
+.bg-green { background-color: #16A34A; }
+.bg-orange { background-color: #D97706; }
+.bg-red { background-color: #DC2626; }
+.bg-gray { background-color: #64748B; }
+
+.weather-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-dark);
+}
+
+.btn-sm {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    margin-bottom: 0;
+}
