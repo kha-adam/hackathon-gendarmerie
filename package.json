@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/kha-adam/hackathon-gendarmerie#readme",
   "dependencies": {
+    "@turf/turf": "^7.4.0",
     "leaflet": "^1.9.4"
   },
   "devDependencies": {

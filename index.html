@@ -52,7 +52,20 @@
                 <ul id="saved-zones-list">
                     <!-- La liste des zones s'affichera ici dynamiquement via TypeScript -->
                 </ul>
-                <button class="danger" id="btn-clear-zones">🗑️ Tout effacer</button>
+                <button class="danger" id="btn-clear-zones">Delete</button>
+            </div>
+            <div class="control-group" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;">
+                <h3>Optimisation du Déploiement</h3>
+    
+                <label>Opérateurs Niveau 1 (Rayon ~2km): <span id="val-l1">1</span></label>
+                <input type="range" id="slider-l1" min="0" max="10" value="1" style="width: 100%; margin-bottom: 10px;" oninput="document.getElementById('val-l1').innerText = this.value">
+
+                <label>Opérateurs Niveau 2 (Rayon ~5km): <span id="val-l2">0</span></label>
+                <input type="range" id="slider-l2" min="0" max="10" value="0" style="width: 100%; margin-bottom: 15px;" oninput="document.getElementById('val-l2').innerText = this.value">
+
+                <button id="btn-optimize" style="background-color: #6f42c1;">Lancer l'Algorithme</button>
+    
+                <h4 style="margin-top: 15px; color: #333;">Couverture estimée : <span id="coverage-text" style="color: #28a745;">0.00%</span></h4>
             </div>
         </div>
         
