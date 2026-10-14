@@ -31,11 +31,9 @@ export class TeleopEstimator {
     /**
      * Cherche le nombre minimal de téléopérateurs pour atteindre la couverture visée.
      * @param objCoverage Pourcentage cible (ex: 30)
-     * @param globalTimeLimitSeconds Temps maximum alloué pour TOUTE la recherche
+     * @param optimizerTimeLimitSeconds Temps maximum alloué pour UNE recherche
      */
-    public estimateMinTeleops(objCoverage: number, globalTimeLimitSeconds: number = 120): EstimationResult | null {
-        const startTime = Date.now();
-        const globalTimeLimitMs = globalTimeLimitSeconds * 1000;
+    public estimateMinTeleops(objCoverage: number, optimizerTimeLimitSeconds: number = 20): EstimationResult | null {
         const polygonArea = turf.area(this.polygon);
         
         // 1. Calcul de la valeur de départ (hypothèse de couverture idéale sans superposition)
@@ -46,9 +44,6 @@ export class TeleopEstimator {
         let totalTeleops = Math.max(1, Math.ceil(targetArea / averageAreaPerTeleop));
         let nbMaxExec = Math.round(totalTeleops * this.MIN_TO_MAX_RATIO_TELEOP);
         
-        // On passe le temps restant (en secondes) pour ne pas dépasser la limite globale
-        const optimizerTimeSeconds = globalTimeLimitSeconds / nbMaxExec;
-
         let bestGlobalResult: EstimationResult | null = null;
         
         // 2. Boucle d'escalade : on ajoute 1 téléopérateur à chaque échec
@@ -70,7 +65,7 @@ export class TeleopEstimator {
                 nbTeleop
             );
 
-            const solution = optimizer.optimize(optimizerTimeSeconds, objCoverage);
+            const solution = optimizer.optimize(optimizerTimeLimitSeconds, objCoverage);
 
             bestGlobalResult = {
                 totalTeleops,
