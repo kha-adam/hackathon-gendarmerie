@@ -19,38 +19,47 @@
             <div class="control-group">
                 <label for="search-input"><strong>🔍 Rechercher une région / zone :</strong></label>
                 <div class="search-box">
-                    <input type="text" id="search-input" placeholder="Ex: Occitanie, Toulouse, Paris..." onkeydown="if(event.key === 'Enter') searchLocation()">
-                    <button type="button" onclick="searchLocation()" class="btn-search">Chercher</button>
+                    <input type="text" id="search-input" placeholder="Ex: Occitanie, Toulouse, Paris...">
+                    <button type="button" id="btn-search" class="btn-search">Chercher</button>
                 </div>
                 <p id="search-status" class="help-text"></p>
             </div>
 
             <!-- TRACÉ MANUEL ET PAR CLIC -->
             <div class="control-group">
-                <button id="draw-toggle-btn" onclick="toggleDrawingMode()">
-                    📍 Enable Map Click Drawing
-                </button>
+                <button id="draw-toggle-btn">Draw the zone</button>
                 <p class="help-text">Or add manually:</p>
                 <div class="coords-inputs">
                     <input type="number" id="lat" placeholder="Lat" step="0.001" value="43.604">
                     <input type="number" id="lng" placeholder="Lng" step="0.001" value="1.444">
                 </div>
-                <button onclick="addPointFromInput()">Add Point</button>
+                <button id="btn-add-point">Add Point</button>
             </div>
 
             <div class="control-group">
-                <strong>Polygon Points:</strong>
+                <strong>Zone Points:</strong>
                 <ul id="point-list"></ul>
-                <button class="danger" onclick="clearPolygon()">Clear Area</button>
+                <button class="danger" id="btn-clear-area">Clear Area</button>
+            </div>
+
+            <!-- GESTION DES ZONES -->
+            <div class="control-group">
+                <button id="btn-save-zone" style="background-color: #28a745;"> Sauvegarder en GeoJSON</button>
+            </div>
+
+            <div class="control-group">
+                <h3>Zones Sauvegardées</h3>
+                <ul id="saved-zones-list">
+                    <!-- La liste des zones s'affichera ici dynamiquement via TypeScript -->
+                </ul>
+                <button class="danger" id="btn-clear-zones">🗑️ Tout effacer</button>
             </div>
         </div>
         
         <div id="map"></div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Custom JS -->
-    <script src="./js/app.js"></script>
+    <script type="module" src="./js/app.ts"></script>
 </body>
 </html>
