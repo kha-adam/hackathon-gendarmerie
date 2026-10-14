@@ -2,6 +2,11 @@
 const map = L.map('map').setView([43.6045, 1.4440], 13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
+// Recalculer la taille de la carte pour éviter le bug d'affichage gris
+setTimeout(() => {
+    map.invalidateSize();
+}, 200);
+
 // 2. Application State
 let targetAreaPoints = [];
 let targetPolygon = null;
@@ -10,7 +15,7 @@ let isDrawingMode = false;
 
 // 3. Map Click Event Listener
 map.on('click', function(e) {
-    if (!isDrawingMode) return; // Only add points if drawing mode is ON
+    if (!isDrawingMode) return;
     
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
@@ -22,15 +27,12 @@ function addPointToState(lat, lng) {
     const newPoint = [lat, lng];
     targetAreaPoints.push(newPoint);
 
-    // Add visual marker
     L.marker(newPoint).addTo(markersGroup);
 
-    // Update the UI list
     const li = document.createElement('li');
     li.textContent = `[${lat.toFixed(4)}, ${lng.toFixed(4)}]`;
     document.getElementById('point-list').appendChild(li);
 
-    // Redraw polygon
     updatePolygon();
 }
 
@@ -48,7 +50,6 @@ function addPointFromInput() {
 
     addPointToState(lat, lng);
 
-    // Shift input slightly for rapid manual entry
     latInput.value = (lat + 0.005).toFixed(4);
     lngInput.value = (lng + 0.005).toFixed(4);
 }
@@ -77,13 +78,12 @@ function toggleDrawingMode() {
     if (isDrawingMode) {
         btn.classList.add('active');
         btn.innerText = "🛑 Stop Map Click Drawing";
-        mapDiv.classList.add('drawing-mode'); // Changes cursor to crosshair
+        mapDiv.classList.add('drawing-mode');
     } else {
         btn.classList.remove('active');
         btn.innerText = "📍 Enable Map Click Drawing";
-        mapDiv.classList.remove('drawing-mode'); // Changes cursor back
+        mapDiv.classList.remove('drawing-mode');
     }
-    console.log("halloo")
 }
 
 // 8. Reset
@@ -95,5 +95,53 @@ function clearPolygon() {
     if (targetPolygon) {
         map.removeLayer(targetPolygon);
         targetPolygon = null;
+    }
+}
+
+// 9. Search Location & Zoom (Geocoding via Nominatim)
+async function searchLocation() {
+    const inputEl = document.getElementById('search-input');
+    const statusEl = document.getElementById('search-status');
+    const query = inputEl.value.trim();
+
+    if (!query) {
+        statusEl.textContent = "⚠️ Saisissez une ville ou une région.";
+        statusEl.style.color = "#dc3545";
+        return;
+    }
+
+    statusEl.textContent = "⏳ Recherche de la zone...";
+    statusEl.style.color = "#007bff";
+
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+            const result = data[0];
+
+            if (result.boundingbox) {
+                const south = parseFloat(result.boundingbox[0]);
+                const north = parseFloat(result.boundingbox[1]);
+                const west = parseFloat(result.boundingbox[2]);
+                const east = parseFloat(result.boundingbox[3]);
+                
+                map.fitBounds([[south, west], [north, east]]);
+            } else {
+                const lat = parseFloat(result.lat);
+                const lon = parseFloat(result.lon);
+                map.flyTo([lat, lon], 12);
+            }
+
+            statusEl.textContent = `✅ Zoom sur : ${result.display_name.split(',')[0]}`;
+            statusEl.style.color = "#28a745";
+        } else {
+            statusEl.textContent = "❌ Aucun résultat trouvé.";
+            statusEl.style.color = "#dc3545";
+        }
+    } catch (error) {
+        console.error("Erreur Geocoding :", error);
+        statusEl.textContent = "❌ Erreur réseau lors de la recherche.";
+        statusEl.style.color = "#dc3545";
     }
 }

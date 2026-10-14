@@ -1,25 +1,125 @@
-body { margin: 0; padding: 20px; background-color: #f0f2f5; font-family: system-ui, sans-serif; }
-#dashboard { display: flex; gap: 20px; max-width: 1400px; margin: 0 auto; height: 80vh; }
+body { 
+    margin: 0; 
+    padding: 20px; 
+    background-color: #f0f2f5; 
+    font-family: system-ui, sans-serif; 
+}
+
+#dashboard { 
+    display: flex; 
+    gap: 20px; 
+    max-width: 1400px; 
+    margin: 0 auto; 
+    height: 85vh; 
+}
 
 /* Sidebar */
-#sidebar { flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto; }
-.control-group { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-.help-text { font-size: 0.85em; color: #666; margin: 10px 0 5px 0; }
+#sidebar { 
+    flex: 1; 
+    background: white; 
+    padding: 20px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+    overflow-y: auto; 
+}
+
+.control-group { 
+    margin-bottom: 15px; 
+    padding-bottom: 15px; 
+    border-bottom: 1px solid #eee; 
+}
+
+.help-text { 
+    font-size: 0.85em; 
+    color: #666; 
+    margin: 6px 0 0 0; 
+}
+
+/* Search Box */
+.search-box { 
+    display: flex; 
+    gap: 8px; 
+    margin-top: 8px; 
+}
+
+.btn-search { 
+    width: auto !important; 
+    white-space: nowrap; 
+    margin-bottom: 0 !important; 
+}
 
 /* Inputs and Buttons */
-input[type="number"] { width: calc(50% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-button { background: #007bff; color: white; border: none; padding: 10px 12px; border-radius: 4px; cursor: pointer; width: 100%; margin-bottom: 5px; transition: background 0.2s; }
-button:hover { background: #0056b3; }
-button.danger { background: #dc3545; }
-button.danger:hover { background: #c82333; }
+input[type="text"], input[type="number"] { 
+    padding: 8px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    box-sizing: border-box;
+}
+
+input[type="text"] { 
+    width: 100%; 
+}
+
+.coords-inputs { 
+    display: flex; 
+    gap: 8px; 
+    margin-bottom: 10px; 
+}
+
+.coords-inputs input[type="number"] { 
+    width: 50%; 
+    margin-bottom: 0; 
+}
+
+button { 
+    background: #007bff; 
+    color: white; 
+    border: none; 
+    padding: 10px 12px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    width: 100%; 
+    margin-bottom: 5px; 
+    transition: background 0.2s; 
+}
+
+button:hover { 
+    background: #0056b3; 
+}
+
+button.danger { 
+    background: #dc3545; 
+}
+
+button.danger:hover { 
+    background: #c82333; 
+}
 
 /* Active State for the Draw Mode Button */
-#draw-toggle-btn.active { background: #28a745; border: 2px solid #1e7e34; }
+#draw-toggle-btn.active { 
+    background: #28a745; 
+    border: 2px solid #1e7e34; 
+}
 
-ul { padding-left: 20px; font-size: 0.9em; color: #555; }
+ul { 
+    padding-left: 20px; 
+    font-size: 0.9em; 
+    color: #555; 
+}
 
 /* Map */
-#map { flex: 3; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); background: #e5e5e5; z-index: 1; cursor: default; }
+#map { 
+    flex: 3; 
+    height: 100%;
+    min-height: 400px;
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+    background: #e5e5e5; 
+    z-index: 1; 
+    cursor: default; 
+}
 
 /* Change map cursor when drawing */
-#map.drawing-mode { cursor: crosshair; }
+#map.drawing-mode { 
+    cursor: crosshair; 
+}
