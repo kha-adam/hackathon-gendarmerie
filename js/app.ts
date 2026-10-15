@@ -276,10 +276,10 @@ function toggleDrawingMode() {
     const mapDiv = document.getElementById('map');
     
     if (isDrawingMode) {
-        if (btn) { btn.classList.add('active'); btn.innerText = "Stop Map Click Drawing"; }
+        if (btn) { btn.classList.add('active'); btn.innerText = "Arrêter le dessin par clic"; }
         if (mapDiv) mapDiv.classList.add('drawing-mode');
     } else {
-        if (btn) { btn.classList.remove('active'); btn.innerText = "Enable Map Click Drawing"; }
+        if (btn) { btn.classList.remove('active'); btn.innerText = "Activer le dessin par clic"; }
         if (mapDiv) mapDiv.classList.remove('drawing-mode');
     }
 }
