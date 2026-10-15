@@ -298,8 +298,8 @@ ul li button:hover {
 
 .weather-floating-card {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
+    top: 20px;
+    right: 20px;
     z-index: 1000;
     background: var(--bg-panel);
     padding: 12px;
