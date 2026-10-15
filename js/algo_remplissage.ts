@@ -81,7 +81,8 @@ export class CoverageOptimizer {
         this.explore(0, [], [], this.nbTeleop[0], this.nbTeleop[1], 0);
         
         if (this.timeLimitReached) {
-            console.log(`Exploration interrompue : limite de temps de ${timeLimitSeconds}s atteinte.`);
+            console.log(`Exploration interrompue : limite de temps de ${timeLimitSeconds}s atteinte.\n
+                Meilleure solution actuelle: ${this.bestSolution.coveragePercentage}`);
         }
         
         return this.bestSolution;

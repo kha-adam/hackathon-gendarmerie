@@ -1,6 +1,7 @@
 import * as turf from '@turf/turf';
 import { Feature, Polygon, Point } from 'geojson';
 import { CoverageOptimizer, CircleDef, Solution } from './algo_remplissage'; // À adapter selon votre nom de fichier
+import {shuffleGrid} from '../utils/shuffle'
 
 export interface EstimationResult {
     totalTeleops: number;
@@ -55,6 +56,9 @@ export class TeleopEstimator {
             const nbTeleop = [nbN1, nbN2];
 
             console.log(`Test avec ${totalTeleops} téléopérateurs (${nbN1} de Niv1, ${nbN2} de Niv2)...`);
+
+            // On remélange la la liste de points avant chaque lancement pour éviter un biais
+            this.grid = shuffleGrid(this.grid);
 
             // Instanciation de l'optimiseur pour cette tentative
             const optimizer = new CoverageOptimizer(
